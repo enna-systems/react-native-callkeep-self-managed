@@ -325,7 +325,7 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
         Log.d(TAG, "[RNCallKeepModule] displayIncomingCall, uuid: " + uuid + ", number: " + number + ", callerName: " + callerName + ", hasVideo: " + hasVideo);
 
         Bundle extras = new Bundle();
-        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_TEL, number, null);
+        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_SIP, callerName + "@enna", null);
 
         extras.putParcelable(TelecomManager.EXTRA_INCOMING_CALL_ADDRESS, uri);
         extras.putString(EXTRA_CALLER_NAME, callerName);
@@ -367,7 +367,7 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
         }
 
         Bundle extras = new Bundle();
-        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_TEL, number, null);
+        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_SIP, callerName + "@enna", null);
 
         Bundle callExtras = new Bundle();
         callExtras.putString(EXTRA_CALLER_NAME, callerName);
@@ -1015,12 +1015,15 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
 
         PhoneAccount.Builder builder = new PhoneAccount.Builder(handle, appName);
         if (isSelfManaged()) {
-            builder.setCapabilities(PhoneAccount.CAPABILITY_SELF_MANAGED);
+
+            builder.setCapabilities(PhoneAccount.CAPABILITY_SELF_MANAGED
+                    | PhoneAccount.CAPABILITY_VIDEO_CALLING
+                    | PhoneAccount.CAPABILITY_SUPPORTS_VIDEO_CALLING);
 
             Bundle selfManagedExtra = new Bundle();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 selfManagedExtra.putBoolean(PhoneAccount.EXTRA_LOG_SELF_MANAGED_CALLS, true);
-                //selfManagedExtra.putBoolean(PhoneAccount.EXTRA_ADD_SELF_MANAGED_CALLS_TO_INCALLSERVICE, true);
+                selfManagedExtra.putBoolean(PhoneAccount.EXTRA_ADD_SELF_MANAGED_CALLS_TO_INCALLSERVICE, true);
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 builder.setExtras(selfManagedExtra);
@@ -1034,7 +1037,16 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
             int identifier = appContext.getResources().getIdentifier(_settings.getString("imageName"), "drawable", appContext.getPackageName());
             Icon icon = Icon.createWithResource(appContext, identifier);
             builder.setIcon(icon);
+        } else {
+            Icon icon = Icon.createWithResource(appContext, R.drawable.ic_launcher_round);
+            builder.setIcon(icon);
         }
+
+        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_SIP, "account@enna", null);
+        builder.setAddress(uri);
+        builder.addSupportedUriScheme(PhoneAccount.SCHEME_SIP);
+        builder.addSupportedUriScheme(PhoneAccount.SCHEME_TEL);
+        builder.setShortDescription(appName);
 
         PhoneAccount account = builder.build();
 

@@ -66,15 +66,15 @@ public class VoiceConnection extends Connection {
         this.handle = handle;
         this.context = context;
 
-        String number = handle.get(EXTRA_CALL_NUMBER);
-        String name = handle.get(EXTRA_CALLER_NAME);
-
-        if (number != null) {
-            setAddress(Uri.parse(number), TelecomManager.PRESENTATION_ALLOWED);
-        }
-        if (name != null && !name.equals("")) {
-            setCallerDisplayName(name, TelecomManager.PRESENTATION_ALLOWED);
-        }
+//        String number = handle.get(EXTRA_CALL_NUMBER);
+//        String name = handle.get(EXTRA_CALLER_NAME);
+//
+//        if (number != null) {
+//            setAddress(Uri.parse(number), TelecomManager.PRESENTATION_ALLOWED);
+//        }
+//        if (name != null && !name.equals("")) {
+//            setCallerDisplayName(name, TelecomManager.PRESENTATION_ALLOWED);
+//        }
     }
 
     @Override
@@ -335,6 +335,7 @@ public class VoiceConnection extends Connection {
         Bundle extras = new Bundle();
         extras.putSerializable("attributeMap", handle);
         i.putExtras(extras);
+        Log.i(TAG, "attributeMap VC " + extras.toString());
         /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(i);
             Log.d(TAG, "[VoiceConnection] startForegroundService");
@@ -343,6 +344,7 @@ public class VoiceConnection extends Connection {
             Log.d(TAG, "[VoiceConnection] startService");
         } */
         context.startService(i);
+        Log.d(TAG, "[VoiceConnection] startService");
     }
 
     /*

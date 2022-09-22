@@ -199,9 +199,12 @@ public class VoiceConnectionService extends ConnectionService {
         Log.d(TAG, "[VoiceConnectionService] onCreateIncomingConnection, name:" + name + ", number" + number +
             ", isForeground: " + isForeground + ", isReachable:" + isReachable + ", timeout: " + timeout);
 
+        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_SIP, name + "@enna", null);
         Connection incomingCallConnection = createConnection(request);
         incomingCallConnection.setRinging();
         incomingCallConnection.setInitialized();
+        incomingCallConnection.setCallerDisplayName(name, TelecomManager.PRESENTATION_ALLOWED);
+        incomingCallConnection.setAddress(uri, TelecomManager.PRESENTATION_ALLOWED);
 
         startForegroundService();
 
@@ -259,10 +262,12 @@ public class VoiceConnectionService extends ConnectionService {
             extras.putBoolean(EXTRA_DISABLE_ADD_CALL, true);
         }
 
+        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_SIP, displayName + "@enna", null);
         outgoingCallConnection = createConnection(request);
         outgoingCallConnection.setDialing();
         outgoingCallConnection.setAudioModeIsVoip(true);
         outgoingCallConnection.setCallerDisplayName(displayName, TelecomManager.PRESENTATION_ALLOWED);
+        outgoingCallConnection.setAddress(uri, TelecomManager.PRESENTATION_ALLOWED);
 
         startForegroundService();
 
