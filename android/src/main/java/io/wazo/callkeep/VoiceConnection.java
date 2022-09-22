@@ -330,6 +330,19 @@ public class VoiceConnection extends Connection {
     public void onShowIncomingCallUi() {
         Log.d(TAG, "[VoiceConnection] onShowIncomingCallUi");
         sendCallRequestToActivity(ACTION_SHOW_INCOMING_CALL_UI, handle);
+        //super.onShowIncomingCallUi();
+        Intent i = new Intent(context, NotificationService.class);
+        Bundle extras = new Bundle();
+        extras.putSerializable("attributeMap", handle);
+        i.putExtras(extras);
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(i);
+            Log.d(TAG, "[VoiceConnection] startForegroundService");
+        } else {
+            context.startService(i);
+            Log.d(TAG, "[VoiceConnection] startService");
+        } */
+        context.startService(i);
     }
 
     /*
