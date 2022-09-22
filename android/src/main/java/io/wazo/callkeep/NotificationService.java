@@ -44,6 +44,7 @@ public class NotificationService extends Service {
         String callerName = attributeMap.get(EXTRA_CALLER_NAME);
 
         Intent fullScreenIntent = new Intent(this, IncomingCallActivity.class);
+        Log.i(TAG, "attributeMap NS " + extras.toString());
         fullScreenIntent.putExtras(extras);
         fullScreenIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent fullScreenPendingIntent = PendingIntent.getActivity(this, 0,

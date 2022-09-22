@@ -36,7 +36,7 @@ public class IncomingCallActivity extends AppCompatActivity {
 
         uuid = attributeMap.get(EXTRA_CALL_UUID);
         callerName = attributeMap.get(EXTRA_CALLER_NAME);
-        Log.i(TAG,"[IncomingCallActivity] uuid " + uuid + " callerName " + callerName);
+        Log.i(TAG,"uuid " + uuid + " callerName " + callerName);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true);
@@ -51,6 +51,7 @@ public class IncomingCallActivity extends AppCompatActivity {
                     | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
                     | WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON);
         }
+        Log.i(TAG,"IncomingCallActivity create");
         setContentView(R.layout.activity_incoming_call);
         findViewById(R.id.btn_reject).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -68,11 +69,11 @@ public class IncomingCallActivity extends AppCompatActivity {
     }
 
     private void onRejectClicked() {
-        Log.i("[IncomingCallActivity] Call rejected");
+        Log.i("Call","Rejected");
         //new RNCallKeepModule().stopRingtone();
         Connection conn = VoiceConnectionService.getConnection(uuid);
         if (conn == null) {
-            Log.w(TAG, "[IncomingCallActivity] rejectCall ignored because no connection found, uuid: " + uuid);
+            Log.w(TAG, "[RNCallKeepModule] rejectCall ignored because no connection found, uuid: " + uuid);
         } else {
             conn.onReject();
         }
@@ -85,11 +86,11 @@ public class IncomingCallActivity extends AppCompatActivity {
     }
 
     private void onAcceptClicked() {
-        Log.i(TAG,"[IncomingCallActivity] Call accepted");
+        Log.i(TAG,"Accepted");
         //VoiceConnection.stopRingtone();
         Connection conn = VoiceConnectionService.getConnection(uuid);
         if (conn == null) {
-            Log.w(TAG, "[IncomingCallActivity] answerIncomingCall ignored because no connection found, uuid: " + uuid);
+            Log.w(TAG, "[RNCallKeepModule] answerIncomingCall ignored because no connection found, uuid: " + uuid);
         } else {
             conn.onAnswer();
         }
