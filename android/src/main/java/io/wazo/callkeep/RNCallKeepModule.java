@@ -30,11 +30,15 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Icon;
+import android.media.AudioAttributes;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.view.WindowManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -916,6 +920,68 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
         }
     }
 
+    public static MediaPlayer mp;
+    public static AudioManager am;
+    public static Vibrator vib;
+
+    @ReactMethod
+    public void startRingtone() {
+        if (mp != null) {
+            return;
+        }
+        if (am == null) {
+            am = (AudioManager) this.reactContext.getSystemService(Context.AUDIO_SERVICE);
+        }
+        //Context c = this;
+        int mode = am.getRingerMode();
+        if (mode == AudioManager.RINGER_MODE_SILENT) {
+            return;
+        }
+        if (vib == null) {
+            vib = (Vibrator) this.reactContext.getSystemService(Context.VIBRATOR_SERVICE);
+        }
+        long[] pattern = {0, 1000, 1000};
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vib.vibrate(VibrationEffect.createWaveform(pattern, new int[] {0, 255, 0}, 0));
+        } else {
+            vib.vibrate(pattern, 0);
+        }
+        if (mode == AudioManager.RINGER_MODE_VIBRATE) {
+            return;
+        }
+        am.setMode(AudioManager.MODE_RINGTONE);
+        mp =
+                MediaPlayer.create(
+                        this.reactContext,
+                        R.raw.incallmanager_ringtone,
+                        new AudioAttributes.Builder()
+                                .setContentType(AudioAttributes.CONTENT_TYPE_UNKNOWN)
+                                .setLegacyStreamType(AudioManager.STREAM_RING)
+                                .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                                .build(),
+                        am.generateAudioSessionId());
+        mp.setVolume(1.0f, 1.0f);
+        mp.setLooping(true);
+        mp.start();
+    }
+
+    @ReactMethod
+    public void stopRingtone() {
+        try {
+            vib.cancel();
+            vib = null;
+        } catch (Exception e) {
+            vib = null;
+        }
+        try {
+            mp.stop();
+            mp.release();
+            mp = null;
+        } catch (Exception e) {
+            mp = null;
+        }
+    }
+
     public static void onRequestPermissionsResult(int requestCode, String[] grantedPermissions, int[] grantResults) {
         int permissionsIndex = 0;
         List<String> permsList = Arrays.asList(permissions);
@@ -950,6 +1016,15 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
         PhoneAccount.Builder builder = new PhoneAccount.Builder(handle, appName);
         if (isSelfManaged()) {
             builder.setCapabilities(PhoneAccount.CAPABILITY_SELF_MANAGED);
+
+            Bundle selfManagedExtra = new Bundle();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                selfManagedExtra.putBoolean(PhoneAccount.EXTRA_LOG_SELF_MANAGED_CALLS, true);
+                //selfManagedExtra.putBoolean(PhoneAccount.EXTRA_ADD_SELF_MANAGED_CALLS_TO_INCALLSERVICE, true);
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                builder.setExtras(selfManagedExtra);
+            }
         }
         else {
             builder.setCapabilities(PhoneAccount.CAPABILITY_CALL_PROVIDER);
