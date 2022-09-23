@@ -1,8 +1,10 @@
 package io.wazo.callkeep;
 
 import android.app.KeyguardManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -27,16 +29,18 @@ import static io.wazo.callkeep.Constants.EXTRA_CALL_UUID;
 public class IncomingCallActivity extends AppCompatActivity {
 
     public String uuid, callerName = "";
+    private IncomingBroadcastReceiver incomingBroadcastReceiver;
 
     private static final String TAG = "RNCallKeep";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         HashMap<String, String> attributeMap = (HashMap<String, String>)getIntent().getSerializableExtra("attributeMap");
 
         uuid = attributeMap.get(EXTRA_CALL_UUID);
         callerName = attributeMap.get(EXTRA_CALLER_NAME);
-        Log.i(TAG,"uuid " + uuid + " callerName " + callerName);
+        Log.i(TAG,"[IncomingCallActivity] uuid " + uuid + " callerName " + callerName);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true);
@@ -51,20 +55,36 @@ public class IncomingCallActivity extends AppCompatActivity {
                     | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
                     | WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON);
         }
-        Log.i(TAG,"IncomingCallActivity create");
-        setContentView(R.layout.activity_incoming_call);
-        findViewById(R.id.btn_reject).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onRejectClicked();
-            }
-        });
-        findViewById(R.id.btn_accept).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onAcceptClicked();
-            }
-        });
+
+        boolean rejectCall = getIntent().getBooleanExtra("rejectCall", false);
+        Log.i(TAG, "[IncomingCallActivity] rejectCall " + rejectCall);
+        boolean acceptCall = getIntent().getBooleanExtra("acceptCall", false);
+        Log.i(TAG, "[IncomingCallActivity] acceptCall " + acceptCall);
+        if(rejectCall) {
+            //if (callAction.equals("rejectCall")) {
+            onRejectClicked();
+        } else if (acceptCall) {
+            onAcceptClicked();
+        }
+        //}
+        else {
+            Log.i(TAG, "[IncomingCallActivity] create");
+            setContentView(R.layout.activity_incoming_call);
+            findViewById(R.id.btn_reject).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onRejectClicked();
+                }
+            });
+            findViewById(R.id.btn_accept).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onAcceptClicked();
+                }
+            });
+        }
+        incomingBroadcastReceiver = new IncomingBroadcastReceiver();
+        registerReceiver(incomingBroadcastReceiver, new IntentFilter("finish_activity"));
         stopService(new Intent(this, NotificationService.class));
     }
 
@@ -73,7 +93,7 @@ public class IncomingCallActivity extends AppCompatActivity {
         //new RNCallKeepModule().stopRingtone();
         Connection conn = VoiceConnectionService.getConnection(uuid);
         if (conn == null) {
-            Log.w(TAG, "[RNCallKeepModule] rejectCall ignored because no connection found, uuid: " + uuid);
+            Log.w(TAG, "[IncomingCallActivity] rejectCall ignored because no connection found, uuid: " + uuid);
         } else {
             conn.onReject();
         }
@@ -86,11 +106,11 @@ public class IncomingCallActivity extends AppCompatActivity {
     }
 
     private void onAcceptClicked() {
-        Log.i(TAG,"Accepted");
+        Log.i(TAG,"[IncomingCallActivity] Call Accepted");
         //VoiceConnection.stopRingtone();
         Connection conn = VoiceConnectionService.getConnection(uuid);
         if (conn == null) {
-            Log.w(TAG, "[RNCallKeepModule] answerIncomingCall ignored because no connection found, uuid: " + uuid);
+            Log.w(TAG, "[IncomingCallActivity] answerIncomingCall ignored because no connection found, uuid: " + uuid);
         } else {
             conn.onAnswer();
         }
@@ -100,5 +120,26 @@ public class IncomingCallActivity extends AppCompatActivity {
         } else {
             finish();
         }
+    }
+
+    private class IncomingBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context arg0, Intent intent) {
+            String action = intent.getAction();
+            Log.i(TAG, "[IncomingCallActivity] broadcastReceiver action " + action);
+            if (action.equals("finish_activity")) {
+                if (android.os.Build.VERSION.SDK_INT >= 21) {
+                    finishAndRemoveTask();
+                } else {
+                    finish();
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(incomingBroadcastReceiver);
     }
 }
