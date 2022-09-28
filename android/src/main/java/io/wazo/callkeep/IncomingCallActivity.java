@@ -45,29 +45,20 @@ public class IncomingCallActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true);
             setTurnScreenOn(true);
-            KeyguardManager keyguardManager = (KeyguardManager)  getSystemService(Context.KEYGUARD_SERVICE);
-            if(keyguardManager!=null)
-                keyguardManager.requestDismissKeyguard(this, null);
         } else {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
                     | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-                    | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
                     | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
                     | WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON);
         }
 
         boolean rejectCall = getIntent().getBooleanExtra("rejectCall", false);
-        Log.i(TAG, "[IncomingCallActivity] rejectCall " + rejectCall);
         boolean acceptCall = getIntent().getBooleanExtra("acceptCall", false);
-        Log.i(TAG, "[IncomingCallActivity] acceptCall " + acceptCall);
         if(rejectCall) {
-            //if (callAction.equals("rejectCall")) {
             onRejectClicked();
         } else if (acceptCall) {
             onAcceptClicked();
-        }
-        //}
-        else {
+        } else {
             Log.i(TAG, "[IncomingCallActivity] create");
             setContentView(R.layout.activity_incoming_call);
             findViewById(R.id.btn_reject).setOnClickListener(new View.OnClickListener() {
@@ -89,7 +80,7 @@ public class IncomingCallActivity extends AppCompatActivity {
     }
 
     private void onRejectClicked() {
-        Log.i("Call","Rejected");
+        Log.i(TAG,"[IncomingCallActivity] Call Rejected");
         //new RNCallKeepModule().stopRingtone();
         Connection conn = VoiceConnectionService.getConnection(uuid);
         if (conn == null) {
