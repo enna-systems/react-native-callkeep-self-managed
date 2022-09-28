@@ -327,6 +327,9 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
         Bundle extras = new Bundle();
         Uri uri = Uri.fromParts(PhoneAccount.SCHEME_SIP, callerName + "@enna", null);
 
+        //number = image URL
+        extras.putString("imageURL", number);
+        extras.putBoolean(TelecomManager.EXTRA_HAS_PICTURE, true);
         extras.putParcelable(TelecomManager.EXTRA_INCOMING_CALL_ADDRESS, uri);
         extras.putString(EXTRA_CALLER_NAME, callerName);
         extras.putString(EXTRA_CALL_UUID, uuid);
@@ -953,7 +956,6 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
 
         PhoneAccount.Builder builder = new PhoneAccount.Builder(handle, appName);
         if (isSelfManaged()) {
-
             builder.setCapabilities(PhoneAccount.CAPABILITY_SELF_MANAGED
                     | PhoneAccount.CAPABILITY_VIDEO_CALLING
                     | PhoneAccount.CAPABILITY_SUPPORTS_VIDEO_CALLING);
