@@ -1,29 +1,26 @@
 package io.wazo.callkeep;
 
-import android.app.KeyguardManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.media.AudioAttributes;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.VibrationEffect;
-import android.os.Vibrator;
 import android.telecom.Connection;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.FileInputStream;
 import java.util.HashMap;
 
 import static io.wazo.callkeep.Constants.EXTRA_CALLER_NAME;
-import static io.wazo.callkeep.Constants.EXTRA_CALL_NUMBER;
 import static io.wazo.callkeep.Constants.EXTRA_CALL_UUID;
 
 public class IncomingCallActivity extends AppCompatActivity {
@@ -40,6 +37,8 @@ public class IncomingCallActivity extends AppCompatActivity {
 
         uuid = attributeMap.get(EXTRA_CALL_UUID);
         callerName = attributeMap.get(EXTRA_CALLER_NAME);
+
+
         Log.i(TAG,"[IncomingCallActivity] uuid " + uuid + " callerName " + callerName);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
@@ -73,6 +72,31 @@ public class IncomingCallActivity extends AppCompatActivity {
                     onAcceptClicked();
                 }
             });
+
+            ImageView imageView = (ImageView) findViewById(R.id.avatar);
+            TextView textView = (TextView) findViewById(R.id.txt_caller_name);
+            //byte[] byteArray = getIntent().getByteArrayExtra("profilePicture");
+
+            Bitmap bmp = null;
+            String filename = getIntent().getStringExtra("profilePicture");
+            try {
+                FileInputStream is = this.openFileInput(filename);
+                bmp = BitmapFactory.decodeStream(is);
+                is.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            if(bmp != null) {
+                // Bitmap bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+                //imageView.setImageBitmap(Bitmap.createScaledBitmap(bmp, imageView.getWidth(), imageView.getHeight(), false));
+                imageView.setImageBitmap(bmp);
+                Log.i(TAG, "[IncomingCallActivity] Profile Picture");
+            } else {
+                imageView.setImageResource(R.drawable.ic_launcher_round);
+                Log.i(TAG, "[IncomingCallActivity] No Profile Picture - using enna logo");
+            }
+            textView.setText(callerName);
         }
         incomingBroadcastReceiver = new IncomingBroadcastReceiver();
         registerReceiver(incomingBroadcastReceiver, new IntentFilter("finish_activity"));

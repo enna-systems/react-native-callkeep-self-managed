@@ -6,22 +6,24 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.Person;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.Icon;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.RemoteViews;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Random;
@@ -79,6 +81,8 @@ public class NotificationService extends Service {
 
     public class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
 
+        private String filename = "ennaProfilePicture.png";
+
         public DownloadImageTask(Context context, Intent intent) {
             mContext = context;
             mIntent = intent;
@@ -91,6 +95,12 @@ public class NotificationService extends Service {
                 Log.i(TAG, "[NotificationService doInBackground urldisplay] " + urldisplay);
                 InputStream in = new java.net.URL(urldisplay).openStream();
                 mIcon11 = BitmapFactory.decodeStream(in);
+
+                FileOutputStream stream = openFileOutput(filename, Context.MODE_PRIVATE);
+                mIcon11.compress(Bitmap.CompressFormat.PNG, 100, stream);
+
+                //Cleanup
+                stream.close();
             } catch (Exception e) {
                 Log.e(TAG, "[NotificationService Error] " + e.getMessage());
                 e.printStackTrace();
@@ -125,6 +135,8 @@ public class NotificationService extends Service {
 
             Intent fullScreenIntent = new Intent(mContext, IncomingCallActivity.class);
             fullScreenIntent.putExtras(extras);
+            fullScreenIntent.putExtra("profilePicture", filename);
+
             fullScreenIntent.setAction(Long.toString(System.currentTimeMillis()));
             fullScreenIntent.setFlags( Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT |
                     Intent.FLAG_ACTIVITY_NEW_TASK |
@@ -158,9 +170,9 @@ public class NotificationService extends Service {
             Notification.Builder notificationBuilder =
                     new Notification.Builder(mContext, CHANNEL_ID)
                             .setSmallIcon(R.drawable.ic_launcher_round)
-                            //.setLargeIcon(result)
-                            .setContentTitle("enna Videocall")
-                            .setContentText(callerName)
+
+                            .setContentTitle(getResources().getString(R.string.incoming_call))
+                            .setContentText(getResources().getString(R.string.incoming_call))
                             //.setPriority(Notification.PRIORITY_HIGH)
                             .setCategory(Notification.CATEGORY_CALL)
                             //.setDefaults(Notification.DEFAULT_LIGHTS)
@@ -177,19 +189,44 @@ public class NotificationService extends Service {
                             // order for the platform to invoke this notification.
                             .setFullScreenIntent(fullScreenPendingIntent, true);
 
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                // Create a new call with the user as caller.
+                Person incoming_caller = new Person.Builder()
+                        .setName(callerName)
+                        .setImportant(true)
+                        .build();
+
+                notificationBuilder.setStyle(
+                        Notification.CallStyle.forIncomingCall(incoming_caller, pendingRejectIntent, pendingAcceptIntent));
+            }
+            else {
+                Notification.Action acceptAction = new Notification.Action.Builder(Icon.createWithResource(mContext, R.drawable.ic_call_accept), getResources().getString(R.string.answer), pendingAcceptIntent).build();
+                Notification.Action declineAction = new Notification.Action.Builder(Icon.createWithResource(mContext, R.drawable.ic_call_reject), getResources().getString(R.string.decline), pendingRejectIntent).build();
+                notificationBuilder.addAction(acceptAction);
+                notificationBuilder.addAction(declineAction);
+            }
+
             //UI
-            RemoteViews customView = new RemoteViews(mContext.getPackageName(), R.layout.custom_call_notification);
-            RemoteViews customFullScreenView = new RemoteViews(mContext.getPackageName(), R.layout.activity_incoming_call);
-            customFullScreenView.setImageViewBitmap(R.id.avatar, result);
-            customFullScreenView.setTextViewText(R.id.txt_caller_name, callerName);
 
-            customView.setTextViewText(R.id.name, callerName);
-            customView.setImageViewBitmap(R.id.photo, result);
-            customView.setOnClickPendingIntent(R.id.btnAnswer, pendingAcceptIntent);
-            customView.setOnClickPendingIntent(R.id.btnDecline, pendingRejectIntent);
+            // RemoteViews customView = new RemoteViews(mContext.getPackageName(), R.layout.custom_call_notification);
 
-            notificationBuilder.setStyle(new Notification.DecoratedCustomViewStyle());
-            notificationBuilder.setCustomContentView(customView);
+            if(result != null) {
+                //customView.setImageViewBitmap(R.id.photo, result);
+                notificationBuilder.setLargeIcon(result);
+
+            } else {
+                //set enna icon
+                //customView.setImageViewResource(R.id.photo, R.drawable.ic_launcher_round);
+                notificationBuilder.setLargeIcon(Icon.createWithResource(mContext, R.drawable.ic_launcher_round));
+            }
+
+            //customView.setTextViewText(R.id.name, callerName);
+            //customView.setOnClickPendingIntent(R.id.btnAnswer, pendingAcceptIntent);
+            //customView.setOnClickPendingIntent(R.id.btnDecline, pendingRejectIntent);
+
+            //notificationBuilder.setStyle(new Notification.DecoratedCustomViewStyle());
+            //notificationBuilder.setCustomContentView(customView);
             // notificationBuilder.setCustomBigContentView(customView);
 
 
@@ -209,7 +246,6 @@ public class NotificationService extends Service {
             createForegroundService(random, notification);
             //startForeground(random, notification);
             //cancel(true);
-
         }
     }
 }
