@@ -21,7 +21,8 @@
                 android:layout_height="wrap_content"
                 android:padding="5dp"
                 android:text="Caller's Name"
-                android:textColor="#28345A"
+                android:fontFamily="@font/sentient"
+                android:textColor="@color/enna_secondary"
                 android:textStyle="bold" />
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -43,7 +44,8 @@
                     android:layout_marginTop="0dp"
                     android:padding="4dp"
                     android:text="@string/incoming_call"
-                    android:textColor="#28345A" />
+                    android:fontFamily="@font/inter_medium"
+                    android:textColor="@color/enna_secondary" />
             </LinearLayout>
         </LinearLayout>
 
@@ -71,7 +73,7 @@
             android:layout_height="48dp"
             android:layout_marginEnd="5dp"
             android:layout_weight="0.5"
-            android:backgroundTint="#F44336"
+            android:backgroundTint="@color/reject"
             android:drawableLeft="@drawable/ic_call_reject_white"
             android:fontFamily="@font/inter_bold"
             android:text="@string/decline"
@@ -85,7 +87,7 @@
             android:layout_height="48dp"
             android:layout_marginStart="5dp"
             android:layout_weight="0.5"
-            android:backgroundTint="#4CAF50"
+            android:backgroundTint="@color/turtle_green"
             android:drawableLeft="@drawable/ic_call_accept_white"
             android:fontFamily="@font/inter_bold"
             android:text="@string/answer"
