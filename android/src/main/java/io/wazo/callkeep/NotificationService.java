@@ -180,6 +180,8 @@ public class NotificationService extends Service {
             //UI
             RemoteViews customView = new RemoteViews(mContext.getPackageName(), R.layout.custom_call_notification);
             RemoteViews customFullScreenView = new RemoteViews(mContext.getPackageName(), R.layout.activity_incoming_call);
+            customFullScreenView.setImageViewBitmap(R.id.avatar, result);
+            customFullScreenView.setTextViewText(R.id.txt_caller_name, callerName);
 
             customView.setTextViewText(R.id.name, callerName);
             customView.setImageViewBitmap(R.id.photo, result);
