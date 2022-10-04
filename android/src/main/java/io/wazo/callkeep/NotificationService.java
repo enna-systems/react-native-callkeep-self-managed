@@ -120,14 +120,14 @@ public class NotificationService extends Service {
             String callerName = attributeMap.get(EXTRA_CALLER_NAME);
 
             Intent rejectIntent = new Intent(mContext, RejectIncomingCallActivity.class);
-            rejectIntent.putExtra("rejectCall",true);
+            //rejectIntent.putExtra("rejectCall",true);
             rejectIntent.putExtras(extras);
             //rejectIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             PendingIntent pendingRejectIntent = PendingIntent.getActivity(mContext, 1,
                     rejectIntent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
             Intent acceptIntent = new Intent(mContext, AcceptIncomingCallActivity.class);
-            acceptIntent.putExtra("acceptCall",true);
+            //acceptIntent.putExtra("acceptCall",true);
             acceptIntent.putExtras(extras);
             //acceptIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             PendingIntent pendingAcceptIntent = PendingIntent.getActivity(mContext, 2,
@@ -230,22 +230,10 @@ public class NotificationService extends Service {
             // notificationBuilder.setCustomBigContentView(customView);
 
 
-/*
-        Notification.Action acceptAction = new Notification.Action.Builder(R.drawable.ic_call_accept, "Accept", pendingAcceptIntent).build();
-        Notification.Action declineAction = new Notification.Action.Builder(R.drawable.ic_call_reject, "Decline", pendingRejectIntent).build();
-        notificationBuilder.addAction(acceptAction);
-        notificationBuilder.addAction(declineAction);
-
- */
-
-
             //}
             notificationBuilder.setChannelId(CHANNEL_ID);
             Notification notification = notificationBuilder.build();
-            // notificationManager.notify(CHANNEL_ID, random, notification);
             createForegroundService(random, notification);
-            //startForeground(random, notification);
-            //cancel(true);
         }
     }
 }
