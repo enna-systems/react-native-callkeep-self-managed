@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<shape
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  android:shape="rectangle"
 
->
-  <solid android:color="@color/enna_light_yellow" />
-</shape>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="375"
+    android:viewportHeight="812">
+  <group>
+    <path android:name="square"
+        android:fillColor="@color/enna_secondary"
+        android:pathData="M0,0 L375,0 L375,812 L0,812 z" />
+    <path
+        android:fillColor="@color/enna_light_yellow"
+        android:pathData="M538.65 316.52c80.65 104.87 193.89 198.72 210.07 310 15.4 111.84-66.52 242.5-171.12 267.1-104.05 25.41-231.6-54.66-361-85.65-130.07-31.11-263.6-12-312.95-66.5-50.14-53.95-16.1-181.5-0.06-321.07C-80.93 280.02-82.67 127.05-9.37 52.08 63.38-23.7 211.29-22.17 309.94 36.67c97.99 58.71 147.4 174.85 228.71 279.85Z"/>
+    <path
+        android:fillColor="@color/enna_tertiary"
+        android:pathData="M373.49-149.2c48.76 104.76 6.85 247.04-13.72 367.43C339.2 338.63 339.2 437.92 291.2 495c-48.77 56.28-145.54 71.14-259.83 89.12-115.05 17.98-247.63 40.65-356.59-16.42-108.96-56.29-195.06-192.32-181.34-314.28 13.71-121.95 127.24-229.06 236.2-334.6 109.72-104.76 214.1-207.17 336.02-224.37 121.15-16.42 259.82 51.6 307.83 156.36Z"/>
+  </group>
+</vector>
