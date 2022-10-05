@@ -31,7 +31,6 @@ public class IncomingCallActivity extends AppCompatActivity {
     private IncomingBroadcastReceiver incomingBroadcastReceiver;
     private Activity mActivity = null;
 
-    private static final String TAG = "RNCallKeep";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,8 +39,7 @@ public class IncomingCallActivity extends AppCompatActivity {
 
         uuid = attributeMap.get(EXTRA_CALL_UUID);
         callerName = attributeMap.get(EXTRA_CALLER_NAME);
-
-        Log.i(TAG,"[IncomingCallActivity] uuid " + uuid + " callerName " + callerName);
+        String imageUrl = attributeMap.get("imageURL");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true);
@@ -94,7 +92,7 @@ public class IncomingCallActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        if(bmp != null) {
+        if(bmp != null && imageUrl != null && !imageUrl.isEmpty()) {
             imageView.setImageBitmap(bmp);
         } else {
             imageView.setImageResource(R.drawable.ic_launcher_round);
@@ -107,50 +105,27 @@ public class IncomingCallActivity extends AppCompatActivity {
     }
 
     private void onRejectClicked() {
-        Log.i(TAG,"[IncomingCallActivity] Call Rejected");
-        //new RNCallKeepModule().stopRingtone();
         Connection conn = VoiceConnectionService.getConnection(uuid);
-        if (conn == null) {
-            Log.w(TAG, "[IncomingCallActivity] rejectCall ignored because no connection found, uuid: " + uuid);
-        } else {
+        if (conn != null) {
             conn.onReject();
         }
-
-        if (android.os.Build.VERSION.SDK_INT >= 21) {
-            finishAndRemoveTask();
-        } else {
-            finish();
-        }
+        finishAndRemoveTask();
     }
 
     private void onAcceptClicked() {
-        Log.i(TAG,"[IncomingCallActivity] Call Accepted");
-        //VoiceConnection.stopRingtone();
         Connection conn = VoiceConnectionService.getConnection(uuid);
-        if (conn == null) {
-            Log.w(TAG, "[IncomingCallActivity] answerIncomingCall ignored because no connection found, uuid: " + uuid);
-        } else {
+        if (conn != null) {
             conn.onAnswer();
         }
-
-        if (android.os.Build.VERSION.SDK_INT >= 21) {
-            finishAndRemoveTask();
-        } else {
-            finish();
-        }
+        finishAndRemoveTask();
     }
 
     private class IncomingBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context arg0, Intent intent) {
             String action = intent.getAction();
-            Log.i(TAG, "[IncomingCallActivity] broadcastReceiver action " + action);
             if (action.equals("finish_activity")) {
-                if (android.os.Build.VERSION.SDK_INT >= 21) {
-                    finishAndRemoveTask();
-                } else {
-                    finish();
-                }
+                finishAndRemoveTask();
             }
         }
     }
