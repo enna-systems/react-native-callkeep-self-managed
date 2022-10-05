@@ -118,7 +118,7 @@ public class NotificationService extends Service {
             //rejectIntent.putExtra("rejectCall",true);
             rejectIntent.putExtras(extras);
             //rejectIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            PendingIntent pendingRejectIntent = PendingIntent.getActivity(mContext, 1,
+            PendingIntent pendingRejectIntent = PendingIntent.getBroadcast(mContext, 1,
                     rejectIntent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
             Intent acceptIntent = new Intent(mContext, AcceptIncomingCallActivity.class);
