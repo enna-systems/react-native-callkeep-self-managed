@@ -34,12 +34,8 @@ import android.os.Vibrator;
 import android.telecom.CallAudioState;
 import android.telecom.Connection;
 import android.telecom.DisconnectCause;
-import android.telecom.TelecomManager;
 import android.net.Uri;
 import android.util.Log;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.HashMap;
 
@@ -147,6 +143,7 @@ public class VoiceConnection extends Connection {
         } catch(Throwable exception) {
             Log.e(TAG, "[VoiceConnection] onDisconnect handle map error", exception);
         }
+        this.stopAll();
         destroy();
     }
 
@@ -347,17 +344,8 @@ public class VoiceConnection extends Connection {
         Bundle extras = new Bundle();
         extras.putSerializable("attributeMap", handle);
         i.putExtras(extras);
-        Log.i(TAG, "attributeMap VC " + extras.toString());
-        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(i);
-            Log.d(TAG, "[VoiceConnection] startForegroundService");
-        } else {
-            context.startService(i);
-            Log.d(TAG, "[VoiceConnection] startService");
-        } */
         context.startService(i);
         startRingtone();
-        Log.d(TAG, "[VoiceConnection] startService");
     }
 
     /*
@@ -444,7 +432,6 @@ public class VoiceConnection extends Connection {
     }
 
     public void stopAll() {
-        Log.i(TAG, "[VoiceConnection] STOP all");
         stopRingtone();
         context.stopService(new Intent(context, NotificationService.class));
         Intent intent = new Intent("finish_activity");

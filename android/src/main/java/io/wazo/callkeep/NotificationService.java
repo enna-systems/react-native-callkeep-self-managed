@@ -30,9 +30,8 @@ import java.util.Random;
 
 public class NotificationService extends Service {
     private static final String TAG = "RNCallKeep";
-    private NotificationManager notificationManager;
     private final int random = new Random().nextInt(500);
-    private String CHANNEL_ID="care.enna.companionapp" + random;
+    private final String CHANNEL_ID="care.enna.companionapp" + random;
     private Intent mIntent;
     private Context mContext;
     @Nullable
@@ -71,17 +70,13 @@ public class NotificationService extends Service {
     public void onDestroy() {
         super.onDestroy();
         Log.i(TAG, "Notification Service stopped");
-        // Intent intent = new Intent("finish_activity");
-        // sendBroadcast(intent);
 
-        //notificationManager.cancel(CHANNEL_ID, random);
-        // notificationManager.cancelAll();
         stopForeground(true);
     }
 
     public class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
 
-        private String filename = "ennaProfilePicture.png";
+        private final String filename = "ennaProfilePicture.png";
 
         public DownloadImageTask(Context context, Intent intent) {
             mContext = context;
@@ -144,7 +139,7 @@ public class NotificationService extends Service {
             //fullScreenIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             PendingIntent fullScreenPendingIntent = PendingIntent.getActivity(mContext, 3,
                     fullScreenIntent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
-            notificationManager = (NotificationManager) mContext.getSystemService(NOTIFICATION_SERVICE);
+            NotificationManager notificationManager = (NotificationManager) mContext.getSystemService(NOTIFICATION_SERVICE);
 
             //For API 26+ you need to put some additional code like below:
             NotificationChannel mChannel;
@@ -205,11 +200,19 @@ public class NotificationService extends Service {
                 Notification.Action declineAction = new Notification.Action.Builder(Icon.createWithResource(mContext, R.drawable.ic_call_reject), getResources().getString(R.string.decline), pendingRejectIntent).build();
                 notificationBuilder.addAction(acceptAction);
                 notificationBuilder.addAction(declineAction);
+                notificationBuilder.setContentTitle(callerName);
             }
 
-            //UI
+            //Custom Push UI
 
-            // RemoteViews customView = new RemoteViews(mContext.getPackageName(), R.layout.custom_call_notification);
+            //RemoteViews customView = new RemoteViews(mContext.getPackageName(), R.layout.custom_call_notification);
+            //customView.setTextViewText(R.id.name, callerName);
+            //customView.setOnClickPendingIntent(R.id.btnAnswer, pendingAcceptIntent);
+            //customView.setOnClickPendingIntent(R.id.btnDecline, pendingRejectIntent);
+
+            //notificationBuilder.setStyle(new Notification.DecoratedCustomViewStyle());
+            //notificationBuilder.setCustomContentView(customView);
+            //notificationBuilder.setCustomBigContentView(customView);
 
             if(result != null) {
                 //customView.setImageViewBitmap(R.id.photo, result);
@@ -221,16 +224,6 @@ public class NotificationService extends Service {
                 notificationBuilder.setLargeIcon(Icon.createWithResource(mContext, R.drawable.ic_launcher_round));
             }
 
-            //customView.setTextViewText(R.id.name, callerName);
-            //customView.setOnClickPendingIntent(R.id.btnAnswer, pendingAcceptIntent);
-            //customView.setOnClickPendingIntent(R.id.btnDecline, pendingRejectIntent);
-
-            //notificationBuilder.setStyle(new Notification.DecoratedCustomViewStyle());
-            //notificationBuilder.setCustomContentView(customView);
-            // notificationBuilder.setCustomBigContentView(customView);
-
-
-            //}
             notificationBuilder.setChannelId(CHANNEL_ID);
             Notification notification = notificationBuilder.build();
             createForegroundService(random, notification);

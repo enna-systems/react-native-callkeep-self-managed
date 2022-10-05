@@ -15,14 +15,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.HashMap;
 
 public class AcceptIncomingCallActivity extends AppCompatActivity {
-    public String uuid;
-    private static final String TAG = "RNCallKeep";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         HashMap<String, String> attributeMap = (HashMap<String, String>)getIntent().getSerializableExtra("attributeMap");
 
-        uuid = attributeMap.get(EXTRA_CALL_UUID);
+        String uuid = attributeMap.get(EXTRA_CALL_UUID);
 
         KeyguardManager keyguardManager = (KeyguardManager)  getSystemService(Context.KEYGUARD_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
@@ -38,18 +36,11 @@ public class AcceptIncomingCallActivity extends AppCompatActivity {
                     | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
                     | WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON);
         }
-        Log.i(TAG, "[AcceptIncomingCallActivity] AcceptCallActivity ");
         Connection conn = VoiceConnectionService.getConnection(uuid);
-        if (conn == null) {
-            Log.w(TAG, "[AcceptIncomingCallActivity] answerIncomingCall ignored because no connection found, uuid: " + uuid);
-        } else {
+        if (conn != null) {
             conn.onAnswer();
         }
 
-        if (android.os.Build.VERSION.SDK_INT >= 21) {
-            finishAndRemoveTask();
-        } else {
-            finish();
-        }
+        finishAndRemoveTask();
     }
 }
