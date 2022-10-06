@@ -12,7 +12,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
 import android.graphics.drawable.Icon;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -101,6 +106,46 @@ public class NotificationService extends Service {
                 e.printStackTrace();
             }
             return mIcon11;
+        }
+
+        public Bitmap getCircleBitmap(Bitmap bitmap) {
+            Bitmap output;
+            Rect srcRect, dstRect;
+            float r;
+            final int width = bitmap.getWidth();
+            final int height = bitmap.getHeight();
+
+            if (width > height){
+                output = Bitmap.createBitmap(height, height, Bitmap.Config.ARGB_8888);
+                int left = (width - height) / 2;
+                int right = left + height;
+                srcRect = new Rect(left, 0, right, height);
+                dstRect = new Rect(0, 0, height, height);
+                r = height / 2;
+            }else{
+                output = Bitmap.createBitmap(width, width, Bitmap.Config.ARGB_8888);
+                int top = (height - width)/2;
+                int bottom = top + width;
+                srcRect = new Rect(0, top, width, bottom);
+                dstRect = new Rect(0, 0, width, width);
+                r = width / 2;
+            }
+
+            Canvas canvas = new Canvas(output);
+
+            final int color = 0xff424242;
+            final Paint paint = new Paint();
+
+            paint.setAntiAlias(true);
+            canvas.drawARGB(0, 0, 0, 0);
+            paint.setColor(color);
+            canvas.drawCircle(r, r, r, paint);
+            paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+            canvas.drawBitmap(bitmap, srcRect, dstRect, paint);
+
+            bitmap.recycle();
+
+            return output;
         }
 
         @RequiresApi(api = Build.VERSION_CODES.O)
@@ -216,7 +261,8 @@ public class NotificationService extends Service {
 
             if(result != null) {
                 //customView.setImageViewBitmap(R.id.photo, result);
-                notificationBuilder.setLargeIcon(result);
+                Bitmap roundedBitmap = getCircleBitmap(result);
+                notificationBuilder.setLargeIcon(roundedBitmap);
 
             } else {
                 //set enna icon
