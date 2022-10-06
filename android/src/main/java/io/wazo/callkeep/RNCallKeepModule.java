@@ -392,6 +392,17 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public boolean checkIfOtherCalls() {
+        Log.d(TAG, "[RNCallKeepModule] checkForOtherCalls called");
+        if(VoiceConnectionService.currentConnections != null && !VoiceConnectionService.currentConnections.isEmpty()) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    @ReactMethod
     public void endAllCalls() {
         Log.d(TAG, "[RNCallKeepModule] endAllCalls called");
         if (!isConnectionServiceAvailable() || !hasPhoneAccount()) {
