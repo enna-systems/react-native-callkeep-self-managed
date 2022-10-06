@@ -177,6 +177,14 @@ class RNCallKeep {
   };
 
   endCall = (uuid) => RNCallKeepModule.endCall(uuid);
+  
+  checkIfOtherCalls = async () => {
+    if(isIOS) {
+      return false;
+    }
+
+    return RNCallKeepModule.checkIfOtherCalls();
+  }
 
   endAllCalls = () => RNCallKeepModule.endAllCalls();
 
