@@ -241,8 +241,8 @@ public class NotificationService extends Service {
                         Notification.CallStyle.forIncomingCall(incoming_caller, pendingRejectIntent, pendingAcceptIntent));
             }
             else {
-                Notification.Action acceptAction = new Notification.Action.Builder(Icon.createWithResource(mContext, R.drawable.ic_call_accept), getResources().getString(R.string.answer), pendingAcceptIntent).build();
-                Notification.Action declineAction = new Notification.Action.Builder(Icon.createWithResource(mContext, R.drawable.ic_call_reject), getResources().getString(R.string.decline), pendingRejectIntent).build();
+                Notification.Action acceptAction = new Notification.Action.Builder(Icon.createWithResource(mContext, R.drawable.ic_answer), getResources().getString(R.string.answer), pendingAcceptIntent).build();
+                Notification.Action declineAction = new Notification.Action.Builder(Icon.createWithResource(mContext, R.drawable.ic_reject), getResources().getString(R.string.decline), pendingRejectIntent).build();
                 notificationBuilder.addAction(acceptAction);
                 notificationBuilder.addAction(declineAction);
                 notificationBuilder.setContentTitle(callerName);
