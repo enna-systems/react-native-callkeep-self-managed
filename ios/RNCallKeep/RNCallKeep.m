@@ -130,6 +130,9 @@ RCT_EXPORT_MODULE()
 
 - (void)stopObserving
 {
+#ifdef DEBUG
+    return;
+#endif
     _hasListeners = FALSE;
 }
 
