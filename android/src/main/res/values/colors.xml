@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<resources>
+  <color name="black">#000000</color>
+  <color name="white">#FFFFFF</color>
+  <color name="white_darken">#E5E5E5</color>
+  <color name="gradient_start">#94CA71</color>
+  <color name="gradient_end">#191919</color>
+  <color name="turtle_green">#74BF53</color>
+  <color name="turtle_green_darken">#65B342</color>
+  <color name="reject">#F44336</color>
+  <color name="reject_darken">#C60D33</color>
+  <color name="yellow">#F1AF20</color>
+  <color name="yellow_darken">#AAF1AF20</color>
+  <color name="enna_primary">#F28482</color>
+  <color name="enna_secondary">#28345A</color>
+  <color name="enna_tertiary">#92AEB2</color>
+  <color name="enna_quaternary">#FFC9B2</color>
+  <color name="enna_light_yellow">#FAF4E7</color>
+  <color name="enna_background_light_grey">#F0EEF7</color>
+</resources>

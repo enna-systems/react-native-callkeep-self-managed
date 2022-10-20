@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="incoming_call">enna Video Call</string>
+    <string name="answer">Answer</string>
+    <string name="decline">Decline</string>
+    <string name="enna_profile_picture">Profile picture</string>
+    <string name="enna" translatable="false">enna</string>
+</resources>

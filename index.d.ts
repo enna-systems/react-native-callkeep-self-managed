@@ -133,6 +133,8 @@ declare module 'react-native-callkeep' {
     static rejectCall(uuid: string): void
 
     static endCall(uuid: string): void
+    
+    static checkIfOtherCalls(): Promise<boolean>
 
     static endAllCalls(): void
 

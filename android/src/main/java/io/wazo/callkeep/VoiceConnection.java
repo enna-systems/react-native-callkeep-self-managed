@@ -20,20 +20,22 @@ package io.wazo.callkeep;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.telecom.CallAudioState;
 import android.telecom.Connection;
 import android.telecom.DisconnectCause;
-import android.telecom.TelecomManager;
 import android.net.Uri;
 import android.util.Log;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.HashMap;
 
@@ -52,6 +54,8 @@ import static io.wazo.callkeep.Constants.ACTION_SHOW_INCOMING_CALL_UI;
 import static io.wazo.callkeep.Constants.ACTION_ON_SILENCE_INCOMING_CALL;
 import static io.wazo.callkeep.Constants.ACTION_DID_CHANGE_AUDIO_ROUTE;
 
+import com.facebook.react.bridge.ReactMethod;
+
 @TargetApi(Build.VERSION_CODES.M)
 public class VoiceConnection extends Connection {
     private boolean isMuted = false;
@@ -66,15 +70,15 @@ public class VoiceConnection extends Connection {
         this.handle = handle;
         this.context = context;
 
-        String number = handle.get(EXTRA_CALL_NUMBER);
-        String name = handle.get(EXTRA_CALLER_NAME);
-
-        if (number != null) {
-            setAddress(Uri.parse(number), TelecomManager.PRESENTATION_ALLOWED);
-        }
-        if (name != null && !name.equals("")) {
-            setCallerDisplayName(name, TelecomManager.PRESENTATION_ALLOWED);
-        }
+//        String number = handle.get(EXTRA_CALL_NUMBER);
+//        String name = handle.get(EXTRA_CALLER_NAME);
+//
+//        if (number != null) {
+//            setAddress(Uri.parse(number), TelecomManager.PRESENTATION_ALLOWED);
+//        }
+//        if (name != null && !name.equals("")) {
+//            setCallerDisplayName(name, TelecomManager.PRESENTATION_ALLOWED);
+//        }
     }
 
     @Override
@@ -139,6 +143,7 @@ public class VoiceConnection extends Connection {
         } catch(Throwable exception) {
             Log.e(TAG, "[VoiceConnection] onDisconnect handle map error", exception);
         }
+        this.stopAll();
         destroy();
     }
 
@@ -165,6 +170,7 @@ public class VoiceConnection extends Connection {
                 break;
         }
         ((VoiceConnectionService)context).deinitConnection(handle.get(EXTRA_CALL_UUID));
+        this.stopAll();
         destroy();
     }
 
@@ -179,6 +185,7 @@ public class VoiceConnection extends Connection {
         } catch(Throwable exception) {
             Log.e(TAG, "[VoiceConnection] onAbort handle map error", exception);
         }
+        this.stopAll();
         destroy();
     }
 
@@ -305,6 +312,7 @@ public class VoiceConnection extends Connection {
 
         sendCallRequestToActivity(ACTION_ANSWER_CALL, handle);
         sendCallRequestToActivity(ACTION_AUDIO_SESSION, handle);
+        this.stopAll();
         Log.d(TAG, "[VoiceConnection] onAnswer executed");
     }
 
@@ -323,6 +331,7 @@ public class VoiceConnection extends Connection {
         } catch(Throwable exception) {
             Log.e(TAG, "[VoiceConnection] onReject, handle map error", exception);
         }
+        this.stopAll();
         destroy();
     }
 
@@ -330,6 +339,13 @@ public class VoiceConnection extends Connection {
     public void onShowIncomingCallUi() {
         Log.d(TAG, "[VoiceConnection] onShowIncomingCallUi");
         sendCallRequestToActivity(ACTION_SHOW_INCOMING_CALL_UI, handle);
+        super.onShowIncomingCallUi();
+        Intent i = new Intent(context, NotificationService.class);
+        Bundle extras = new Bundle();
+        extras.putSerializable("attributeMap", handle);
+        i.putExtras(extras);
+        context.startService(i);
+        startRingtone();
     }
 
     /*
@@ -351,5 +367,74 @@ public class VoiceConnection extends Connection {
                 LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
             }
         });
+    }
+
+    public static MediaPlayer mp;
+    public static AudioManager am;
+    public static Vibrator vib;
+
+    @ReactMethod
+    public void startRingtone() {
+        if (mp != null) {
+            return;
+        }
+        if (am == null) {
+            am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        }
+        //Context c = this;
+        int mode = am.getRingerMode();
+        if (mode == AudioManager.RINGER_MODE_SILENT) {
+            return;
+        }
+        if (vib == null) {
+            vib = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        }
+        long[] pattern = {0, 1000, 1000};
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vib.vibrate(VibrationEffect.createWaveform(pattern, new int[] {0, 255, 0}, 0));
+        } else {
+            vib.vibrate(pattern, 0);
+        }
+        if (mode == AudioManager.RINGER_MODE_VIBRATE) {
+            return;
+        }
+        am.setMode(AudioManager.MODE_RINGTONE);
+        mp =
+                MediaPlayer.create(
+                        context,
+                        R.raw.incallmanager_ringtone,
+                        new AudioAttributes.Builder()
+                                .setContentType(AudioAttributes.CONTENT_TYPE_UNKNOWN)
+                                .setLegacyStreamType(AudioManager.STREAM_RING)
+                                .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                                .build(),
+                        am.generateAudioSessionId());
+        //mp.setVolume(1.0f, 1.0f);
+        mp.setLooping(true);
+        mp.start();
+    }
+
+    @ReactMethod
+    public void stopRingtone() {
+        try {
+            vib.cancel();
+            vib = null;
+        } catch (Exception e) {
+            vib = null;
+        }
+        try {
+            mp.stop();
+            mp.release();
+            mp = null;
+        } catch (Exception e) {
+            mp = null;
+        }
+    }
+
+    public void stopAll() {
+        stopRingtone();
+        context.stopService(new Intent(context, NotificationService.class));
+        Intent intent = new Intent("finish_activity");
+        context.sendBroadcast(intent);
     }
 }

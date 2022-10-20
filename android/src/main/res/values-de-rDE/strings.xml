@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="incoming_call">enna Videoanruf</string>
+    <string name="answer">Annehmen</string>
+    <string name="decline">Ablehnen</string>
+    <string name="enna_profile_picture">Profilbild</string>
+</resources>

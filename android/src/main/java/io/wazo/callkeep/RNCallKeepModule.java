@@ -27,8 +27,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Icon;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
@@ -38,12 +36,10 @@ import android.os.Bundle;
 import android.view.WindowManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.telecom.CallAudioState;
 import android.telecom.Connection;
-import android.telecom.DisconnectCause;
 import android.telecom.PhoneAccount;
 import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
@@ -51,7 +47,6 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -66,18 +61,14 @@ import com.facebook.react.HeadlessJsTaskService;
 import com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter;
 import com.facebook.react.modules.permissions.PermissionsModule;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 
 import org.json.JSONObject;
 import org.json.JSONException;
-
-import static androidx.core.app.ActivityCompat.requestPermissions;
 
 import static io.wazo.callkeep.Constants.EXTRA_CALLER_NAME;
 import static io.wazo.callkeep.Constants.EXTRA_CALL_UUID;
@@ -109,9 +100,9 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
     private static final String E_ACTIVITY_DOES_NOT_EXIST = "E_ACTIVITY_DOES_NOT_EXIST";
     private static final String REACT_NATIVE_MODULE_NAME = "RNCallKeep";
     private static String[] permissions = {
-        Build.VERSION.SDK_INT < 30 ? Manifest.permission.READ_PHONE_STATE : Manifest.permission.READ_PHONE_NUMBERS,
-        Manifest.permission.CALL_PHONE,
-        Manifest.permission.RECORD_AUDIO
+            Build.VERSION.SDK_INT < 30 ? Manifest.permission.READ_PHONE_STATE : Manifest.permission.READ_PHONE_NUMBERS,
+            Manifest.permission.CALL_PHONE,
+            Manifest.permission.RECORD_AUDIO
     };
 
     private static final String TAG = "RNCallKeep";
@@ -227,12 +218,12 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void addListener(String eventName) {
-      // Keep: Required for RN built in Event Emitter Calls.
+        // Keep: Required for RN built in Event Emitter Calls.
     }
 
     @ReactMethod
     public void removeListeners(Integer count) {
-      // Keep: Required for RN built in Event Emitter Calls.
+        // Keep: Required for RN built in Event Emitter Calls.
     }
 
     @ReactMethod
@@ -321,8 +312,11 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
         Log.d(TAG, "[RNCallKeepModule] displayIncomingCall, uuid: " + uuid + ", number: " + number + ", callerName: " + callerName + ", hasVideo: " + hasVideo);
 
         Bundle extras = new Bundle();
-        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_TEL, number, null);
+        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_SIP, callerName + "@enna", null);
 
+        //number = image URL
+        extras.putString("imageURL", number);
+        extras.putBoolean(TelecomManager.EXTRA_HAS_PICTURE, true);
         extras.putParcelable(TelecomManager.EXTRA_INCOMING_CALL_ADDRESS, uri);
         extras.putString(EXTRA_CALLER_NAME, callerName);
         extras.putString(EXTRA_CALL_UUID, uuid);
@@ -363,7 +357,7 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
         }
 
         Bundle extras = new Bundle();
-        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_TEL, number, null);
+        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_SIP, callerName + "@enna", null);
 
         Bundle callExtras = new Bundle();
         callExtras.putString(EXTRA_CALLER_NAME, callerName);
@@ -383,7 +377,7 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
     public void endCall(String uuid) {
         Log.d(TAG, "[RNCallKeepModule] endCall called, uuid: " + uuid);
         if (!isConnectionServiceAvailable() || !hasPhoneAccount()) {
-           Log.w(TAG, "[RNCallKeepModule] endCall ignored due to no ConnectionService or no phone account");
+            Log.w(TAG, "[RNCallKeepModule] endCall ignored due to no ConnectionService or no phone account");
             return;
         }
 
@@ -398,6 +392,21 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void checkIfOtherCalls(Promise promise) {
+        promise.resolve(hasOtherCalls());
+    }
+
+    private boolean hasOtherCalls() {
+        Log.d(TAG, "[RNCallKeepModule] hasOtherCalls called");
+        if(VoiceConnectionService.currentConnections != null && !VoiceConnectionService.currentConnections.isEmpty()) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    @ReactMethod
     public void endAllCalls() {
         Log.d(TAG, "[RNCallKeepModule] endAllCalls called");
         if (!isConnectionServiceAvailable() || !hasPhoneAccount()) {
@@ -406,7 +415,7 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
         }
 
         ArrayList<Map.Entry<String, VoiceConnection>> connections =
-            new ArrayList<Map.Entry<String, VoiceConnection>>(VoiceConnectionService.currentConnections.entrySet());
+                new ArrayList<Map.Entry<String, VoiceConnection>>(VoiceConnectionService.currentConnections.entrySet());
         for (Map.Entry<String, VoiceConnection> connectionEntry : connections) {
             Connection connectionToEnd = connectionEntry.getValue();
             connectionToEnd.onDisconnect();
@@ -444,75 +453,75 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
         if (!this.hasPermissions()) {
             WritableArray allPermissionaw = Arguments.createArray();
             for (String allPermission : allPermissions) {
-               allPermissionaw.pushString(allPermission);
+                allPermissionaw.pushString(allPermission);
             }
 
             getReactApplicationContext()
-                .getNativeModule(PermissionsModule.class)
-                .requestMultiplePermissions(allPermissionaw, new Promise() {
-                    @Override
-                    public void resolve(@Nullable Object value) {
-                        WritableMap grantedPermission = (WritableMap) value;
-                        int[] grantedResult = new int[allPermissions.length];
-                        for (int i=0; i<allPermissions.length; ++i) {
-                            String perm = allPermissions[i];
-                            grantedResult[i] = grantedPermission.getString(perm).equals("granted")
-                                ? PackageManager.PERMISSION_GRANTED
-                                : PackageManager.PERMISSION_DENIED;
+                    .getNativeModule(PermissionsModule.class)
+                    .requestMultiplePermissions(allPermissionaw, new Promise() {
+                        @Override
+                        public void resolve(@Nullable Object value) {
+                            WritableMap grantedPermission = (WritableMap) value;
+                            int[] grantedResult = new int[allPermissions.length];
+                            for (int i=0; i<allPermissions.length; ++i) {
+                                String perm = allPermissions[i];
+                                grantedResult[i] = grantedPermission.getString(perm).equals("granted")
+                                        ? PackageManager.PERMISSION_GRANTED
+                                        : PackageManager.PERMISSION_DENIED;
+                            }
+                            RNCallKeepModule.onRequestPermissionsResult(REQUEST_READ_PHONE_STATE, allPermissions, grantedResult);
                         }
-                        RNCallKeepModule.onRequestPermissionsResult(REQUEST_READ_PHONE_STATE, allPermissions, grantedResult);
-                    }
 
-                    @Override
-                    public void reject(String code, String message) {
-                        hasPhoneAccountPromise.resolve(false);
-                    }
+                        @Override
+                        public void reject(String code, String message) {
+                            hasPhoneAccountPromise.resolve(false);
+                        }
 
-                    @Override
-                    public void reject(String code, Throwable throwable) {
-                        hasPhoneAccountPromise.resolve(false);
-                    }
+                        @Override
+                        public void reject(String code, Throwable throwable) {
+                            hasPhoneAccountPromise.resolve(false);
+                        }
 
-                    @Override
-                    public void reject(String code, String message, Throwable throwable) {
-                        hasPhoneAccountPromise.resolve(false);
-                    }
+                        @Override
+                        public void reject(String code, String message, Throwable throwable) {
+                            hasPhoneAccountPromise.resolve(false);
+                        }
 
-                    @Override
-                    public void reject(Throwable throwable) {
-                        hasPhoneAccountPromise.resolve(false);
-                    }
+                        @Override
+                        public void reject(Throwable throwable) {
+                            hasPhoneAccountPromise.resolve(false);
+                        }
 
-                    @Override
-                    public void reject(Throwable throwable, WritableMap userInfo) {
-                        hasPhoneAccountPromise.resolve(false);
-                    }
+                        @Override
+                        public void reject(Throwable throwable, WritableMap userInfo) {
+                            hasPhoneAccountPromise.resolve(false);
+                        }
 
-                    @Override
-                    public void reject(String code, @NonNull WritableMap userInfo) {
-                        hasPhoneAccountPromise.resolve(false);
-                    }
+                        @Override
+                        public void reject(String code, @NonNull WritableMap userInfo) {
+                            hasPhoneAccountPromise.resolve(false);
+                        }
 
-                    @Override
-                    public void reject(String code, Throwable throwable, WritableMap userInfo) {
-                        hasPhoneAccountPromise.resolve(false);
-                    }
+                        @Override
+                        public void reject(String code, Throwable throwable, WritableMap userInfo) {
+                            hasPhoneAccountPromise.resolve(false);
+                        }
 
-                    @Override
-                    public void reject(String code, String message, @NonNull WritableMap userInfo) {
-                        hasPhoneAccountPromise.resolve(false);
-                    }
+                        @Override
+                        public void reject(String code, String message, @NonNull WritableMap userInfo) {
+                            hasPhoneAccountPromise.resolve(false);
+                        }
 
-                    @Override
-                    public void reject(String code, String message, Throwable throwable, WritableMap userInfo) {
-                        hasPhoneAccountPromise.resolve(false);
-                    }
+                        @Override
+                        public void reject(String code, String message, Throwable throwable, WritableMap userInfo) {
+                            hasPhoneAccountPromise.resolve(false);
+                        }
 
-                    @Override
-                    public void reject(String message) {
-                        hasPhoneAccountPromise.resolve(false);
-                    }
-            });
+                        @Override
+                        public void reject(String message) {
+                            hasPhoneAccountPromise.resolve(false);
+                        }
+                    });
             return;
         }
 
@@ -949,7 +958,18 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
 
         PhoneAccount.Builder builder = new PhoneAccount.Builder(handle, appName);
         if (isSelfManaged()) {
-            builder.setCapabilities(PhoneAccount.CAPABILITY_SELF_MANAGED);
+            builder.setCapabilities(PhoneAccount.CAPABILITY_SELF_MANAGED
+                    | PhoneAccount.CAPABILITY_VIDEO_CALLING
+                    | PhoneAccount.CAPABILITY_SUPPORTS_VIDEO_CALLING);
+
+            Bundle selfManagedExtra = new Bundle();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                selfManagedExtra.putBoolean(PhoneAccount.EXTRA_LOG_SELF_MANAGED_CALLS, true);
+                selfManagedExtra.putBoolean(PhoneAccount.EXTRA_ADD_SELF_MANAGED_CALLS_TO_INCALLSERVICE, true);
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                builder.setExtras(selfManagedExtra);
+            }
         }
         else {
             builder.setCapabilities(PhoneAccount.CAPABILITY_CALL_PROVIDER);
@@ -959,7 +979,16 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
             int identifier = appContext.getResources().getIdentifier(_settings.getString("imageName"), "drawable", appContext.getPackageName());
             Icon icon = Icon.createWithResource(appContext, identifier);
             builder.setIcon(icon);
+        } else {
+            Icon icon = Icon.createWithResource(appContext, R.drawable.ic_launcher_round);
+            builder.setIcon(icon);
         }
+
+        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_SIP, "account@enna", null);
+        builder.setAddress(uri);
+        builder.addSupportedUriScheme(PhoneAccount.SCHEME_SIP);
+        builder.addSupportedUriScheme(PhoneAccount.SCHEME_TEL);
+        builder.setShortDescription(appName);
 
         PhoneAccount account = builder.build();
 
@@ -1017,8 +1046,8 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
         }
 
         return isConnectionServiceAvailable() && telecomManager != null &&
-            hasPermissions() && telecomManager.getPhoneAccount(handle) != null &&
-            telecomManager.getPhoneAccount(handle).isEnabled();
+                hasPermissions() && telecomManager.getPhoneAccount(handle) != null &&
+                telecomManager.getPhoneAccount(handle).isEnabled();
     }
 
     private void registerReceiver() {
