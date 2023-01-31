@@ -23,6 +23,8 @@ import android.app.ActivityManager.RunningTaskInfo;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Activity;
 import android.content.res.Resources;
 import android.content.Intent;
 import android.content.Context;
@@ -79,6 +81,7 @@ public class VoiceConnectionService extends ConnectionService {
     private static ConnectionRequest currentConnectionRequest;
     private static PhoneAccountHandle phoneAccountHandle;
     private static String TAG = "RNCallKeep";
+    private static int NOTIFICATION_ID = -4567;
 
     // Delay events sent to RNCallKeepModule when there is no listener available
     private static List<Bundle> delayedEvents = new ArrayList<Bundle>();
@@ -271,7 +274,7 @@ public class VoiceConnectionService extends ConnectionService {
         // ‍️Weirdly on some Samsung phones (A50, S9...) using `setInitialized` will not display the native UI ...
         // when making a call from the native Phone application. The call will still be displayed correctly without it.
         if (!Build.MANUFACTURER.equalsIgnoreCase("Samsung")) {
-            Log.d(TAG, "[VoiceConnectionService] onCreateOutgoingConnection: initializing connection on Samsung device");
+            Log.d(TAG, "[VoiceConnectionService] onCreateOutgoingConnection: initializing connection on non-Samsung device");
             outgoingCallConnection.setInitialized();
         }
 
@@ -311,6 +314,18 @@ public class VoiceConnectionService extends ConnectionService {
                 .setContentTitle(foregroundSettings.getString("notificationTitle"))
                 .setPriority(NotificationManager.IMPORTANCE_MIN)
                 .setCategory(Notification.CATEGORY_SERVICE);
+
+        Activity currentActivity = RNCallKeepModule.instance.getCurrentReactActivity();
+        if (currentActivity != null) {
+            Intent notificationIntent = new Intent(this, currentActivity.getClass());
+            notificationIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+            final int flag =  Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE : PendingIntent.FLAG_UPDATE_CURRENT;
+
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID, notificationIntent, flag);
+
+            notificationBuilder.setContentIntent(pendingIntent);
+        }
 
         if (foregroundSettings.hasKey("notificationIcon")) {
             Context context = this.getApplicationContext();
