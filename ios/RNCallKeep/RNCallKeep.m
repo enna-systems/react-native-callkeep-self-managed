@@ -153,7 +153,7 @@ RCT_EXPORT_MODULE()
 }
 
 - (void)sendEventWithNameWrapper:(NSString *)name body:(id)body {
-    NSLog(@"[[RNCallKeep]] sendEventWithNameWrapper: %@, hasListeners : %@", name, _hasListeners ? @"YES": @"NO");
+    NSLog(@"[RNCallKeep] sendEventWithNameWrapper: %@, hasListeners : %@", name, _hasListeners ? @"YES": @"NO");
 
     if (_hasListeners) {
         [self sendEventWithName:name body:body];
@@ -624,6 +624,9 @@ RCT_EXPORT_METHOD(getAudioRoutes: (RCTPromiseResolveBlock)resolve
     else if ([type isEqualToString:AVAudioSessionPortBuiltInSpeaker]){
         return @"Speaker";
     }
+    else if ([type isEqualToString:AVAudioSessionPortCarAudio]) {
+        return @"CarAudio";
+    }
     else{
         return nil;
     }
@@ -896,10 +899,24 @@ RCT_EXPORT_METHOD(getAudioRoutes: (RCTPromiseResolveBlock)resolve
     NSLog(@"[RNCallKeep][configureAudioSession] Activating audio session");
 #endif
 
-    AVAudioSession* audioSession = [AVAudioSession sharedInstance];
-    [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionAllowBluetooth | AVAudioSessionCategoryOptionAllowBluetoothA2DP error:nil];
+    NSUInteger categoryOptions = AVAudioSessionCategoryOptionAllowBluetooth | AVAudioSessionCategoryOptionAllowBluetoothA2DP;
+    NSString *mode = AVAudioSessionModeDefault;
+    
+    NSDictionary *settings = [RNCallKeep getSettings];
+    if (settings && settings[@"audioSession"]) {
+        if (settings[@"audioSession"][@"categoryOptions"]) {
+            categoryOptions = [settings[@"audioSession"][@"categoryOptions"] integerValue];
+        }
 
-    [audioSession setMode:AVAudioSessionModeDefault error:nil];
+        if (settings[@"audioSession"][@"mode"]) {
+            mode = settings[@"audioSession"][@"mode"];
+        }
+    }
+    
+    AVAudioSession* audioSession = [AVAudioSession sharedInstance];
+    [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:categoryOptions error:nil];
+
+    [audioSession setMode:mode error:nil];
 
     double sampleRate = 44100.0;
     [audioSession setPreferredSampleRate:sampleRate error:nil];
