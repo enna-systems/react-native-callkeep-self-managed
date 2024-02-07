@@ -23,6 +23,8 @@ import android.app.ActivityManager.RunningTaskInfo;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Activity;
 import android.content.res.Resources;
 import android.content.Intent;
 import android.content.Context;
@@ -79,6 +81,7 @@ public class VoiceConnectionService extends ConnectionService {
     private static ConnectionRequest currentConnectionRequest;
     private static PhoneAccountHandle phoneAccountHandle;
     private static String TAG = "RNCallKeep";
+    private static int NOTIFICATION_ID = -4567;
 
     // Delay events sent to RNCallKeepModule when there is no listener available
     private static List<Bundle> delayedEvents = new ArrayList<Bundle>();
@@ -215,17 +218,23 @@ public class VoiceConnectionService extends ConnectionService {
     @Override
     public Connection onCreateOutgoingConnection(PhoneAccountHandle connectionManagerPhoneAccount, ConnectionRequest request) {
         VoiceConnectionService.hasOutgoingCall = true;
-        String uuid = UUID.randomUUID().toString();
 
-        Log.d(TAG, "[VoiceConnectionService] onCreateOutgoingConnection, uuid:" + uuid);
+        Bundle extras = request.getExtras();
+        String callUUID = extras.getString(EXTRA_CALL_UUID);
+
+        if(callUUID == null || callUUID == ""){
+          callUUID = UUID.randomUUID().toString();
+        }
+
+        Log.d(TAG, "[VoiceConnectionService] onCreateOutgoingConnection, uuid:"  + callUUID);
 
         if (!isInitialized && !isReachable) {
-            this.notReachableCallUuid = uuid;
+            this.notReachableCallUuid = callUUID;
             this.currentConnectionRequest = request;
             this.checkReachability();
         }
 
-        return this.makeOutgoingCall(request, uuid, false);
+        return this.makeOutgoingCall(request, callUUID, false);
     }
 
     private Connection makeOutgoingCall(ConnectionRequest request, String uuid, Boolean forceWakeUp) {
@@ -271,7 +280,7 @@ public class VoiceConnectionService extends ConnectionService {
         // ‍️Weirdly on some Samsung phones (A50, S9...) using `setInitialized` will not display the native UI ...
         // when making a call from the native Phone application. The call will still be displayed correctly without it.
         if (!Build.MANUFACTURER.equalsIgnoreCase("Samsung")) {
-            Log.d(TAG, "[VoiceConnectionService] onCreateOutgoingConnection: initializing connection on Samsung device");
+            Log.d(TAG, "[VoiceConnectionService] onCreateOutgoingConnection: initializing connection on non-Samsung device");
             outgoingCallConnection.setInitialized();
         }
 
@@ -293,7 +302,7 @@ public class VoiceConnectionService extends ConnectionService {
         Log.d(TAG, "[VoiceConnectionService] startForegroundService");
         ReadableMap foregroundSettings = getForegroundSettings(null);
 
-        if (foregroundSettings == null || !foregroundSettings.hasKey("channelId")) {
+        if (!this.isForegroundServiceConfigured()) {
             Log.w(TAG, "[VoiceConnectionService] Not creating foregroundService because not configured");
             return;
         }
@@ -312,6 +321,18 @@ public class VoiceConnectionService extends ConnectionService {
                 .setPriority(NotificationManager.IMPORTANCE_MIN)
                 .setCategory(Notification.CATEGORY_SERVICE);
 
+        Activity currentActivity = RNCallKeepModule.instance.getCurrentReactActivity();
+        if (currentActivity != null) {
+            Intent notificationIntent = new Intent(this, currentActivity.getClass());
+            notificationIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+            final int flag =  Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE : PendingIntent.FLAG_UPDATE_CURRENT;
+
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID, notificationIntent, flag);
+
+            notificationBuilder.setContentIntent(pendingIntent);
+        }
+
         if (foregroundSettings.hasKey("notificationIcon")) {
             Context context = this.getApplicationContext();
             Resources res = context.getResources();
@@ -322,18 +343,39 @@ public class VoiceConnectionService extends ConnectionService {
         Log.d(TAG, "[VoiceConnectionService] Starting foreground service");
 
         Notification notification = notificationBuilder.build();
-        startForeground(FOREGROUND_SERVICE_TYPE_MICROPHONE, notification);
+
+        try {
+            startForeground(FOREGROUND_SERVICE_TYPE_MICROPHONE, notification);
+        } catch (Exception e) {
+            Log.w(TAG, "[VoiceConnectionService] Can't start foreground service : " + e.toString());
+        }
     }
 
     private void stopForegroundService() {
         Log.d(TAG, "[VoiceConnectionService] stopForegroundService");
         ReadableMap foregroundSettings = getForegroundSettings(null);
 
-        if (foregroundSettings == null || !foregroundSettings.hasKey("channelId")) {
-            Log.d(TAG, "[VoiceConnectionService] Discarding stop foreground service, no service configured");
+        if (!this.isForegroundServiceConfigured()) {
+            Log.w(TAG, "[VoiceConnectionService] Not creating foregroundService because not configured");
             return;
         }
-        stopForeground(FOREGROUND_SERVICE_TYPE_MICROPHONE);
+
+        try {
+            stopForeground(FOREGROUND_SERVICE_TYPE_MICROPHONE);
+        } catch (Exception e) {
+            Log.w(TAG, "[VoiceConnectionService] can't stop foreground service :" + e.toString());
+        }
+    }
+
+    private boolean isForegroundServiceConfigured() {
+        ReadableMap foregroundSettings = getForegroundSettings(null);
+        try {
+            return foregroundSettings != null && foregroundSettings.hasKey("channelId");
+        } catch (Exception e) {
+            // Fix ArrayIndexOutOfBoundsException thrown by ReadableNativeMap.hasKey
+            Log.w(TAG, "[VoiceConnectionService] Not creating foregroundService due to configuration retrieval error" + e.toString());
+            return false;
+        }
     }
 
     private void wakeUpApplication(String uuid, String number, String displayName) {

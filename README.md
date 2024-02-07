@@ -15,10 +15,11 @@ For more information about **ConnectionService** on Android, please see [Android
 - [Demo](#Demo)
 - [Installation](#Installation)
 - [Usage](#Usage)
+  - [Expo](#Usage-with-Expo)
   - [Constants](#Constants)
   - [Android Self Managed](#Android-Self-Managed-Mode)
   - [API](#Api)
-  - [Example](##Example)
+  - [Example](#Example)
 - [PushKit](#PushKit)
 - [Android 11](#Android-11)
 - [Debug](#Debug)
@@ -129,6 +130,11 @@ Alternative on iOS you can perform setup in `AppDelegate.m`. Doing this allows c
     - `displayCallReachabilityTimeout`: number in ms (optional)
       If provided, starts a timeout that checks if the application is reachable and ends the call if not (Default: null)
       You'll have to call `setReachable()` as soon as your Javascript application is started.
+    - `audioSession`: object
+      - `categoryOptions`: AudioSessionCategoryOption|number (optional)
+        If provided, it will override the default AVAudioSession setCategory options.
+      - `mode`: AudioSessionMode|string (optional)
+        If provided, it will override the default AVAudioSession setMode mode.
   - `android`: object
     - `alertTitle`: string (required)
       When asking for _phone account_ permission, we need to provider a title for the `Alert` to ask the user for it
@@ -154,6 +160,10 @@ Alternative on iOS you can perform setup in `AppDelegate.m`. Doing this allows c
 `setup` calls internally `registerPhoneAccount`, `registerEvents` and `setSettings`.
 
 You can alternatively just call `setSettings()` with the same option as `setup()` to define only your settings.
+
+# Usage with Expo
+
+To use this library with Expo, you will need to create a development build. Expo Go does not support custom native modules. For information on how to create and run a development build, visit: [Create a development build - Expo Documentation](https://docs.expo.dev/develop/development-builds/create-a-build/). You can use and test this library with a development build installed on your physical device (iOS and Android). 
 
 # Constants
 
@@ -209,6 +219,7 @@ Self Managed calling apps are an advanced topic, and there are many steps involv
 | [setForegroundServiceSettings()](#setForegroundServiceSettings)   | `Promise<void>`     |  ❌  |   ✅    |
 | [canMakeMultipleCalls()](#canMakeMultipleCalls)                   | `Promise<void>`     |  ❌  |   ✅    |
 | [setCurrentCallActive()](#setCurrentCallActive)                   | `Promise<void>`     |  ❌  |   ✅    |
+| [checkIsInManagedCall()](#setAvailable)                           | `Promise<Boolean>`  |  ❌  |   ✅    |
 | [isCallActive()](#isCallActive)                                   | `Promise<Boolean>`  |  ✅  |   ❌    |
 | [getCalls()](#getCalls)                                           | `Promise<Object[]>` |  ✅  |   ❌    |
 | [displayIncomingCall()](#displayIncomingCall)                     | `Promise<void>`     |  ✅  |   ✅    |
@@ -305,6 +316,16 @@ RNCallKeep.setCurrentCallActive(uuid);
 
 - `uuid`: string
   - The `uuid` used for `startCall` or `displayIncomingCall`
+
+### checkIsInManagedCall
+_This feature is available only on Android._
+
+Returns true if there is an active native call
+
+```js
+RNCallKeep.checkIsInManagedCall();
+```
+
 
 ### isCallActive
 _This feature is available only on IOS._
@@ -726,11 +747,12 @@ RNCallKeep.registerAndroidEvents();
 | [didPerformSetMutedCallAction](#didPerformSetMutedCallAction)   |  ✅  |   ✅    |
 | [didToggleHoldCallAction](#didToggleHoldCallAction)             |  ✅  |   ✅    |
 | [didPerformDTMFAction](#didPerformDTMFAction)                   |  ✅  |   ✅    |
-| [didLoadWithEvents](#didLoadWithEvents)                         |  ✅  |   ✅    |
+| [didLoadWithEvents](#didLoadWithEvents)                         |  ✅  |   ❌    |
 | [showIncomingCallUi](#showIncomingCallUi)                       |  ❌  |   ✅    |
 | [silenceIncomingCall](#silenceIncomingCall)                     |  ❌  |   ✅    |
 | [checkReachability](#checkReachability)                         |  ❌  |   ✅    |
 | [didChangeAudioRoute](#didChangeAudioRoute)                     |  ✅  |   ✅    |
+| [onHasActiveCall](#onHasActiveCall)                             |  ❌  |   ✅    |
 
 ### didReceiveStartCallAction
 
@@ -754,7 +776,7 @@ RNCallKeep.addEventListener('didReceiveStartCallAction', ({ handle, callUUID, na
 - `name` (string)
   - Name of the callee
 
-### - answerCall
+### answerCall
 
 User answer the incoming call
 
@@ -767,7 +789,7 @@ RNCallKeep.addEventListener('answerCall', ({ callUUID }) => {
 - `callUUID` (string)
   - The UUID of the call that is to be answered.
 
-### - endCall
+### endCall
 
 User finish the call.
 
@@ -780,7 +802,7 @@ RNCallKeep.addEventListener('endCall', ({ callUUID }) => {
 - `callUUID` (string)
   - The UUID of the call that is to be ended.
 
-### - didActivateAudioSession
+### didActivateAudioSession
 
 The `AudioSession` has been activated by **RNCallKeep**.
 
@@ -791,7 +813,7 @@ RNCallKeep.addEventListener('didActivateAudioSession', () => {
 });
 ```
 
-### - didDisplayIncomingCall
+### didDisplayIncomingCall
 
 Callback for `RNCallKeep.displayIncomingCall`
 
@@ -821,7 +843,7 @@ RNCallKeep.addEventListener('didDisplayIncomingCall', ({ error, callUUID, handle
 - `payload` (object)
   - VOIP push payload.
 
-### - didPerformSetMutedCallAction
+### didPerformSetMutedCallAction
 
 A call was muted by the system or the user:
 
@@ -835,7 +857,7 @@ RNCallKeep.addEventListener('didPerformSetMutedCallAction', ({ muted, callUUID }
 - `callUUID` (string)
   - The UUID of the call.
 
-### - didToggleHoldCallAction
+### didToggleHoldCallAction
 
 A call was held or unheld by the current user
 
@@ -845,10 +867,13 @@ RNCallKeep.addEventListener('didToggleHoldCallAction', ({ hold, callUUID }) => {
 });
 ```
 
-### - didChangeAudioRoute
+- `hold` (boolean)
+- `callUUID` (string)
+  - The UUID of the call.
+
+### didChangeAudioRoute
 
 Triggered when the audio route has been changed.
-⚠️ Will send `Speaker` on iOS but `SPEAKER` on Android.
 
 ```js
 RNCallKeep.addEventListener('didChangeAudioRoute', ({ output }) => {
@@ -856,11 +881,12 @@ RNCallKeep.addEventListener('didChangeAudioRoute', ({ output }) => {
 });
 ```
 
-- `hold` (boolean)
-- `callUUID` (string)
-  - The UUID of the call.
+- `output` (string) ⚠️ Will send `Speaker` on iOS but `SPEAKER` on Android.
+- `reason` (number, iOS only) See case's in https://developer.apple.com/documentation/avfaudio/avaudiosession/routechangereason
+- `handle` (string, Android only) Phone number of the incoming caller
+- `callUUID` (string, Android only) The UUID of the call
 
-### - didPerformDTMFAction
+### didPerformDTMFAction
 
 Used type a number on his dialer
 
@@ -875,7 +901,7 @@ RNCallKeep.addEventListener('didPerformDTMFAction', ({ digits, callUUID }) => {
 - `callUUID` (string)
   - The UUID of the call.
 
-### - didLoadWithEvents
+### didLoadWithEvents
 
 iOS only.
 
@@ -902,7 +928,7 @@ RNCallKeep.addEventListener('didLoadWithEvents', (events) => {
   - `data`: object
     Object with data passed together with specific event so it can be handled in the same way like original event, for example `({ callUUID })` for `answerCall` event if `name` is `RNCallKeepPerformAnswerCallAction`
 
-### - showIncomingCallUi
+### showIncomingCallUi
 
 _Android only. Self Managed only._
 
@@ -923,7 +949,7 @@ The following values will match those initially passed to `displayIncomingCall`
 - `name` (string)
   - Caller Name.
 
-### - silenceIncomingCall
+### silenceIncomingCall
 
 _Android only. Self Managed only._
 
@@ -944,7 +970,7 @@ The following values will match those initially passed to `silenceIncomingCall`
 - `name` (string)
   - Caller Name.
 
-### - createIncomingConnectionFailed
+### createIncomingConnectionFailed
 
 _Android only. Self Managed only._
 
@@ -965,7 +991,7 @@ The following values will match those initially passed to `silenceIncomingCall`
 - `name` (string)
   - Caller Name.
 
-### - checkReachability
+### checkReachability
 
 _Android only._
 
@@ -975,6 +1001,19 @@ So we have to check if the application is reachable before making a call from th
 ```js
 RNCallKeep.addEventListener('checkReachability', () => {
   RNCallKeep.setReachable();
+});
+
+```
+
+### onHasActiveCall
+
+_Android only._
+
+A listener that tells the JS side if a native call has been answered while there was an active self-managed call
+
+```js
+RNCallKeep.addEventListener('onHasActiveCall', () => {
+  // eg: End active app call if native call is answered
 });
 
 ```
@@ -1103,6 +1142,7 @@ class RNCallKeepExample extends React.Component {
   }
 }
 ```
+
 
 ## Receiving a call when the application is not reachable.
 
