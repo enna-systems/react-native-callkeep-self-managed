@@ -100,7 +100,11 @@ public class IncomingCallActivity extends AppCompatActivity {
         textView.setText(callerName);
 
         incomingBroadcastReceiver = new IncomingBroadcastReceiver();
-        registerReceiver(incomingBroadcastReceiver, new IntentFilter("finish_activity"));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(incomingBroadcastReceiver, new IntentFilter("finish_activity"), Context.RECEIVER_EXPORTED);
+        } else {
+            registerReceiver(incomingBroadcastReceiver, new IntentFilter("finish_activity"));
+        }
         stopService(new Intent(this, NotificationService.class));
     }
 
