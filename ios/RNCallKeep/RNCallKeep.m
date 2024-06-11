@@ -134,12 +134,12 @@ RCT_EXPORT_MODULE()
     return;
 #endif
     _hasListeners = FALSE;
-    
+
     // Fix for https://github.com/react-native-webrtc/react-native-callkeep/issues/406
     // We use Objective-C Key Value Coding(KVC) to sync _RTCEventEmitter_ `_listenerCount`.
     @try {
         [self setValue:@0 forKey:@"_listenerCount"];
-    } 
+    }
     @catch ( NSException *e ){
         NSLog(@"[RNCallKeep][stopObserving] exception: %@",e);
         NSLog(@"[RNCallKeep][stopObserving] RNCallKeep parent class RTCEventEmitter might have a broken state.");
@@ -192,7 +192,16 @@ RCT_EXPORT_MODULE()
 }
 
 + (NSString *) getAudioOutput {
-    return [AVAudioSession sharedInstance].currentRoute.outputs.count > 0 ? [AVAudioSession sharedInstance].currentRoute.outputs[0].portType : nil;
+    @try{
+        NSArray<AVAudioSessionPortDescription *>* outputs = [AVAudioSession sharedInstance].currentRoute.outputs;
+        if(outputs != nil && outputs.count > 0){
+            return outputs[0].portType;
+        }
+    } @catch(NSException* error) {
+        NSLog(@"getAudioOutput error :%@", [error description]);
+    }
+
+    return nil;
 }
 
 + (void)setup:(NSDictionary *)options {
@@ -557,7 +566,7 @@ RCT_EXPORT_METHOD(getAudioRoutes: (RCTPromiseResolveBlock)resolve
 {
     NSMutableArray *newInputs = [NSMutableArray new];
     NSString * selected = [RNCallKeep getSelectedAudioRoute];
-    
+
     NSMutableDictionary *speakerDict = [[NSMutableDictionary alloc]init];
     [speakerDict setObject:@"Speaker" forKey:@"name"];
     [speakerDict setObject:AVAudioSessionPortBuiltInSpeaker forKey:@"type"];
@@ -648,13 +657,13 @@ RCT_EXPORT_METHOD(getAudioRoutes: (RCTPromiseResolveBlock)resolve
     AVAudioSession* myAudioSession = [AVAudioSession sharedInstance];
     AVAudioSessionRouteDescription *currentRoute = [myAudioSession currentRoute];
     NSArray *selectedOutputs = currentRoute.outputs;
-    
+
     AVAudioSessionPortDescription *selectedOutput = selectedOutputs[0];
-    
+
     if(selectedOutput && [selectedOutput.portType isEqualToString:AVAudioSessionPortBuiltInReceiver]) {
         return @"Phone";
     }
-    
+
     return [RNCallKeep getAudioInputType: selectedOutput.portType];
 }
 
@@ -912,7 +921,7 @@ RCT_EXPORT_METHOD(getAudioRoutes: (RCTPromiseResolveBlock)resolve
 
     NSUInteger categoryOptions = AVAudioSessionCategoryOptionAllowBluetooth | AVAudioSessionCategoryOptionAllowBluetoothA2DP;
     NSString *mode = AVAudioSessionModeDefault;
-    
+
     NSDictionary *settings = [RNCallKeep getSettings];
     if (settings && settings[@"audioSession"]) {
         if (settings[@"audioSession"][@"categoryOptions"]) {
@@ -923,7 +932,7 @@ RCT_EXPORT_METHOD(getAudioRoutes: (RCTPromiseResolveBlock)resolve
             mode = settings[@"audioSession"][@"mode"];
         }
     }
-    
+
     AVAudioSession* audioSession = [AVAudioSession sharedInstance];
     [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:categoryOptions error:nil];
 
