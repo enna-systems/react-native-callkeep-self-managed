@@ -1,6 +1,6 @@
 {
   "name": "react-native-callkeep",
-  "version": "4.3.13",
+  "version": "4.3.14",
   "description": "iOS 10 CallKit and Android ConnectionService Framework For React Native",
   "main": "index.js",
   "scripts": {},
@@ -9,8 +9,12 @@
     "url": "git+https://github.com/react-native-webrtc/react-native-callkeep.git"
   },
   "author": "See AUTHORS file",
-  "maintainers": ["See AUTHORS file"],
-  "contributors": ["See AUTHORS file"],
+  "maintainers": [
+    "See AUTHORS file"
+  ],
+  "contributors": [
+    "See AUTHORS file"
+  ],
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/react-native-webrtc/react-native-callkeep/issues"
