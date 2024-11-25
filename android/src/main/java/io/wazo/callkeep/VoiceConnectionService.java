@@ -118,17 +118,17 @@ public class VoiceConnectionService extends ConnectionService {
     }
 
     public static WritableMap getSettings(@Nullable Context context) {
-        WritableMap settings = RNCallKeepModule.getSettings(context);
-        return settings;
+       WritableMap settings = RNCallKeepModule.getSettings(context);
+       return settings;
     }
 
     public static ReadableMap getForegroundSettings(@Nullable Context context) {
-        WritableMap settings = VoiceConnectionService.getSettings(context);
-        if (settings == null) {
-            return null;
-        }
+       WritableMap settings = VoiceConnectionService.getSettings(context);
+       if (settings == null) {
+          return null;
+       }
 
-        return settings.getMap("foregroundService");
+       return settings.getMap("foregroundService");
     }
 
     public static void setCanMakeMultipleCalls(Boolean value) {
@@ -197,7 +197,7 @@ public class VoiceConnectionService extends ConnectionService {
         Integer timeout = settings.hasKey("displayCallReachabilityTimeout") ? settings.getInt("displayCallReachabilityTimeout") : null;
 
         Log.d(TAG, "[VoiceConnectionService] onCreateIncomingConnection, name:" + name + ", number" + number +
-                ", isForeground: " + isForeground + ", isReachable:" + isReachable + ", timeout: " + timeout);
+            ", isForeground: " + isForeground + ", isReachable:" + isReachable + ", timeout: " + timeout);
 
         Uri uri = Uri.fromParts(PhoneAccount.SCHEME_SIP, name + "@enna", null);
         Connection incomingCallConnection = createConnection(request);
@@ -317,9 +317,9 @@ public class VoiceConnectionService extends ConnectionService {
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
         notificationBuilder.setOngoing(true)
-                .setContentTitle(foregroundSettings.getString("notificationTitle"))
-                .setPriority(NotificationManager.IMPORTANCE_MIN)
-                .setCategory(Notification.CATEGORY_SERVICE);
+            .setContentTitle(foregroundSettings.getString("notificationTitle"))
+            .setPriority(NotificationManager.IMPORTANCE_MIN)
+            .setCategory(Notification.CATEGORY_SERVICE);
 
         Activity currentActivity = RNCallKeepModule.instance.getCurrentReactActivity();
         if (currentActivity != null) {
@@ -379,7 +379,7 @@ public class VoiceConnectionService extends ConnectionService {
     }
 
     private void wakeUpApplication(String uuid, String number, String displayName) {
-        Log.d(TAG, "[VoiceConnectionService] wakeUpApplication, uuid:" + uuid + ", number :" + number + ", displayName:" + displayName);
+         Log.d(TAG, "[VoiceConnectionService] wakeUpApplication, uuid:" + uuid + ", number :" + number + ", displayName:" + displayName);
 
         // Avoid to call wake up the app again in wakeUpAfterReachabilityTimeout.
         this.currentConnectionRequest = null;
@@ -424,11 +424,11 @@ public class VoiceConnectionService extends ConnectionService {
         sendCallRequestToActivity(ACTION_CHECK_REACHABILITY, null, true);
 
         new android.os.Handler().postDelayed(
-                new Runnable() {
-                    public void run() {
-                        instance.wakeUpAfterReachabilityTimeout(instance.currentConnectionRequest);
-                    }
-                }, 2000);
+            new Runnable() {
+                public void run() {
+                    instance.wakeUpAfterReachabilityTimeout(instance.currentConnectionRequest);
+                }
+            }, 2000);
     }
 
     private Boolean canMakeOutgoingCall() {
@@ -538,7 +538,7 @@ public class VoiceConnectionService extends ConnectionService {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                // Run this in a Looper to avoid : java.lang.RuntimeException: Can't create handler inside thread Thread
+            // Run this in a Looper to avoid : java.lang.RuntimeException: Can't create handler inside thread Thread
                 int count = delayedEvents.size();
                 Log.d(TAG, "[VoiceConnectionService] startObserving, event count: " + count);
 

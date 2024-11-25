@@ -1220,8 +1220,8 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule implements Life
         }
 
         return isConnectionServiceAvailable() && telecomManager != null &&
-                hasPermissions() && telecomManager.getPhoneAccount(handle) != null &&
-                telecomManager.getPhoneAccount(handle).isEnabled();
+            hasPermissions() && telecomManager.getPhoneAccount(handle) != null &&
+            telecomManager.getPhoneAccount(handle).isEnabled();
     }
 
     protected void registerReceiver() {
