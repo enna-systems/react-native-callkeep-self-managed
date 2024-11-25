@@ -103,9 +103,9 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule implements Life
     private static final String E_ACTIVITY_DOES_NOT_EXIST = "E_ACTIVITY_DOES_NOT_EXIST";
     private static final String REACT_NATIVE_MODULE_NAME = "RNCallKeep";
     private static String[] permissions = {
-            Build.VERSION.SDK_INT < 30 ? Manifest.permission.READ_PHONE_STATE : Manifest.permission.READ_PHONE_NUMBERS,
-            Manifest.permission.CALL_PHONE,
-            Manifest.permission.RECORD_AUDIO
+        Build.VERSION.SDK_INT < 30 ? Manifest.permission.READ_PHONE_STATE : Manifest.permission.READ_PHONE_NUMBERS,
+        Manifest.permission.CALL_PHONE,
+        Manifest.permission.RECORD_AUDIO
     };
 
     private static final String TAG = "RNCallKeep";
@@ -340,12 +340,12 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule implements Life
 
     @ReactMethod
     public void addListener(String eventName) {
-        // Keep: Required for RN built in Event Emitter Calls.
+      // Keep: Required for RN built in Event Emitter Calls.
     }
 
     @ReactMethod
     public void removeListeners(Integer count) {
-        // Keep: Required for RN built in Event Emitter Calls.
+      // Keep: Required for RN built in Event Emitter Calls.
     }
 
     @ReactMethod
@@ -513,7 +513,7 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule implements Life
     public void endCall(String uuid) {
         Log.d(TAG, "[RNCallKeepModule] endCall called, uuid: " + uuid);
         if (!isConnectionServiceAvailable() || !hasPhoneAccount()) {
-            Log.w(TAG, "[RNCallKeepModule] endCall ignored due to no ConnectionService or no phone account");
+           Log.w(TAG, "[RNCallKeepModule] endCall ignored due to no ConnectionService or no phone account");
             return;
         }
 
@@ -594,7 +594,7 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule implements Life
         if (!this.hasPermissions()) {
             WritableArray allPermissionaw = Arguments.createArray();
             for (String allPermission : allPermissions) {
-                allPermissionaw.pushString(allPermission);
+               allPermissionaw.pushString(allPermission);
             }
 
             this.reactContext
@@ -607,8 +607,8 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule implements Life
                         for (int i=0; i<allPermissions.length; ++i) {
                             String perm = allPermissions[i];
                             grantedResult[i] = grantedPermission.getString(perm).equals("granted")
-                                    ? PackageManager.PERMISSION_GRANTED
-                                    : PackageManager.PERMISSION_DENIED;
+                                ? PackageManager.PERMISSION_GRANTED
+                                : PackageManager.PERMISSION_DENIED;
                         }
                         RNCallKeepModule.onRequestPermissionsResult(REQUEST_READ_PHONE_STATE, allPermissions, grantedResult);
                     }
@@ -662,7 +662,7 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule implements Life
                     public void reject(String message) {
                         hasPhoneAccountPromise.resolve(false);
                     }
-                });
+            });
             return;
         }
 
