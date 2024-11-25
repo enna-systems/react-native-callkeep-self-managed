@@ -555,7 +555,7 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule implements Life
         }
 
         ArrayList<Map.Entry<String, VoiceConnection>> connections =
-                new ArrayList<Map.Entry<String, VoiceConnection>>(VoiceConnectionService.currentConnections.entrySet());
+            new ArrayList<Map.Entry<String, VoiceConnection>>(VoiceConnectionService.currentConnections.entrySet());
         for (Map.Entry<String, VoiceConnection> connectionEntry : connections) {
             Connection connectionToEnd = connectionEntry.getValue();
             connectionToEnd.onDisconnect();
@@ -598,71 +598,71 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule implements Life
             }
 
             this.reactContext
-                    .getNativeModule(PermissionsModule.class)
-                    .requestMultiplePermissions(allPermissionaw, new Promise() {
-                        @Override
-                        public void resolve(@Nullable Object value) {
-                            WritableMap grantedPermission = (WritableMap) value;
-                            int[] grantedResult = new int[allPermissions.length];
-                            for (int i=0; i<allPermissions.length; ++i) {
-                                String perm = allPermissions[i];
-                                grantedResult[i] = grantedPermission.getString(perm).equals("granted")
-                                        ? PackageManager.PERMISSION_GRANTED
-                                        : PackageManager.PERMISSION_DENIED;
-                            }
-                            RNCallKeepModule.onRequestPermissionsResult(REQUEST_READ_PHONE_STATE, allPermissions, grantedResult);
+                .getNativeModule(PermissionsModule.class)
+                .requestMultiplePermissions(allPermissionaw, new Promise() {
+                    @Override
+                    public void resolve(@Nullable Object value) {
+                        WritableMap grantedPermission = (WritableMap) value;
+                        int[] grantedResult = new int[allPermissions.length];
+                        for (int i=0; i<allPermissions.length; ++i) {
+                            String perm = allPermissions[i];
+                            grantedResult[i] = grantedPermission.getString(perm).equals("granted")
+                                    ? PackageManager.PERMISSION_GRANTED
+                                    : PackageManager.PERMISSION_DENIED;
                         }
+                        RNCallKeepModule.onRequestPermissionsResult(REQUEST_READ_PHONE_STATE, allPermissions, grantedResult);
+                    }
 
-                        @Override
-                        public void reject(String code, String message) {
-                            hasPhoneAccountPromise.resolve(false);
-                        }
+                    @Override
+                    public void reject(String code, String message) {
+                        hasPhoneAccountPromise.resolve(false);
+                    }
 
-                        @Override
-                        public void reject(String code, Throwable throwable) {
-                            hasPhoneAccountPromise.resolve(false);
-                        }
+                    @Override
+                    public void reject(String code, Throwable throwable) {
+                        hasPhoneAccountPromise.resolve(false);
+                    }
 
-                        @Override
-                        public void reject(String code, String message, Throwable throwable) {
-                            hasPhoneAccountPromise.resolve(false);
-                        }
+                    @Override
+                    public void reject(String code, String message, Throwable throwable) {
+                        hasPhoneAccountPromise.resolve(false);
+                    }
 
-                        @Override
-                        public void reject(Throwable throwable) {
-                            hasPhoneAccountPromise.resolve(false);
-                        }
+                    @Override
+                    public void reject(Throwable throwable) {
+                        hasPhoneAccountPromise.resolve(false);
+                    }
 
-                        @Override
-                        public void reject(Throwable throwable, WritableMap userInfo) {
-                            hasPhoneAccountPromise.resolve(false);
-                        }
+                    @Override
+                    public void reject(Throwable throwable, WritableMap userInfo) {
+                        hasPhoneAccountPromise.resolve(false);
+                    }
 
-                        @Override
-                        public void reject(String code, @NonNull WritableMap userInfo) {
-                            hasPhoneAccountPromise.resolve(false);
-                        }
+                    @Override
+                    public void reject(String code, @NonNull WritableMap userInfo) {
+                        hasPhoneAccountPromise.resolve(false);
+                    }
 
-                        @Override
-                        public void reject(String code, Throwable throwable, WritableMap userInfo) {
-                            hasPhoneAccountPromise.resolve(false);
-                        }
+                    @Override
+                    public void reject(String code, Throwable throwable, WritableMap userInfo) {
+                        hasPhoneAccountPromise.resolve(false);
+                    }
 
-                        @Override
-                        public void reject(String code, String message, @NonNull WritableMap userInfo) {
-                            hasPhoneAccountPromise.resolve(false);
-                        }
+                    @Override
+                    public void reject(String code, String message, @NonNull WritableMap userInfo) {
+                        hasPhoneAccountPromise.resolve(false);
+                    }
 
-                        @Override
-                        public void reject(String code, String message, Throwable throwable, WritableMap userInfo) {
-                            hasPhoneAccountPromise.resolve(false);
-                        }
+                    @Override
+                    public void reject(String code, String message, Throwable throwable, WritableMap userInfo) {
+                        hasPhoneAccountPromise.resolve(false);
+                    }
 
-                        @Override
-                        public void reject(String message) {
-                            hasPhoneAccountPromise.resolve(false);
-                        }
-                    });
+                    @Override
+                    public void reject(String message) {
+                        hasPhoneAccountPromise.resolve(false);
+                    }
+                });
             return;
         }
 
