@@ -93,6 +93,9 @@ import static io.wazo.callkeep.Constants.ACTION_ON_SILENCE_INCOMING_CALL;
 import static io.wazo.callkeep.Constants.ACTION_ON_CREATE_CONNECTION_FAILED;
 import static io.wazo.callkeep.Constants.ACTION_DID_CHANGE_AUDIO_ROUTE;
 
+import static android.telecom.VideoProfile.STATE_BIDIRECTIONAL;
+import static android.telecom.VideoProfile.STATE_AUDIO_ONLY;
+
 // @see https://github.com/kbagchiGWC/voice-quickstart-android/blob/9a2aff7fbe0d0a5ae9457b48e9ad408740dfb968/exampleConnectionService/src/main/java/com/twilio/voice/examples/connectionservice/VoiceConnectionServiceActivity.java
 public class RNCallKeepModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
     public static final int REQUEST_READ_PHONE_STATE = 1337;
@@ -503,6 +506,9 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule implements Life
 
         extras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, handle);
         extras.putParcelable(TelecomManager.EXTRA_OUTGOING_CALL_EXTRAS, callExtras);
+        extras.putBoolean(TelecomManager.EXTRA_START_CALL_WITH_SPEAKERPHONE, hasVideo);
+        extras.putInt(TelecomManager.EXTRA_START_CALL_WITH_VIDEO_STATE,
+                hasVideo ? STATE_BIDIRECTIONAL : STATE_AUDIO_ONLY);
 
         Log.d(TAG, "[RNCallKeepModule] startCall, uuid: " + uuid);
         this.listenToNativeCallsState();
@@ -837,26 +843,35 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule implements Life
             if (conn == null) {
                 return;
             }
-            if(audioRoute.equals("Bluetooth")) {
-                Log.d(TAG,"[RNCallKeepModule] setting audio route: Bluetooth");
+            // added jitsi audio device types, see: node_modules/@jitsi/react-native-sdk/react/features/mobile/audio-mode/components/AudioRoutePickerDialog.tsx#L119
+            if (audioRoute.equalsIgnoreCase("bluetooth")) {
+                Log.d(TAG, "[RNCallKeepModule] setting audio route: Bluetooth");
                 conn.setAudioRoute(CallAudioState.ROUTE_BLUETOOTH);
                 promise.resolve(true);
                 return;
             }
-            if(audioRoute.equals("Headset")) {
-                Log.d(TAG,"[RNCallKeepModule] setting audio route: Headset");
+            if (audioRoute.equalsIgnoreCase("headset") || audioRoute.equalsIgnoreCase("headphones")) {
+                Log.d(TAG, "[RNCallKeepModule] setting audio route: Headset");
                 conn.setAudioRoute(CallAudioState.ROUTE_WIRED_HEADSET);
                 promise.resolve(true);
                 return;
             }
-            if(audioRoute.equals("Speaker")) {
-                Log.d(TAG,"[RNCallKeepModule] setting audio route: Speaker");
+            // SPEAKER; Speaker; speaker; SPEAKER_PHONE
+            if (audioRoute.toLowerCase().contains("speaker")) {
+                Log.d(TAG, "[RNCallKeepModule] setting audio route: Speaker");
                 conn.setAudioRoute(CallAudioState.ROUTE_SPEAKER);
                 promise.resolve(true);
                 return;
             }
-            Log.d(TAG,"[RNCallKeepModule] setting audio route: Wired/Earpiece");
-            conn.setAudioRoute(CallAudioState.ROUTE_WIRED_OR_EARPIECE);
+            if (audioRoute.equalsIgnoreCase("earpiece")) {
+                Log.d(TAG, "[RNCallKeepModule] setting audio route: Wired/Earpiece");
+                conn.setAudioRoute(CallAudioState.ROUTE_WIRED_OR_EARPIECE);
+                promise.resolve(true);
+                return;
+            }
+            // default to speaker
+            Log.d(TAG, "[RNCallKeepModule] setting audio route: Speaker");
+            conn.setAudioRoute(CallAudioState.ROUTE_SPEAKER);
             promise.resolve(true);
         } catch (Exception e) {
             promise.reject("SetAudioRoute", e.getMessage());
