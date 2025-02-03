@@ -380,43 +380,41 @@ public class VoiceConnection extends Connection {
 
     @ReactMethod
     public void startRingtone() {
-        if (mp != null) {
-            return;
+        try {
+            if (mp != null) {
+                return;
+            }
+            if (am == null) {
+                am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            }
+            int mode = am.getRingerMode();
+            if (mode == AudioManager.RINGER_MODE_SILENT) {
+                return;
+            }
+            if (vib == null) {
+                vib = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+            }
+            long[] pattern = {0, 1000, 1000};
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vib.vibrate(VibrationEffect.createWaveform(pattern, new int[] {0, 255, 0}, 0));
+            } else {
+                vib.vibrate(pattern, 0);
+            }
+            if (mode == AudioManager.RINGER_MODE_VIBRATE) {
+                return;
+            }
+            am.setMode(AudioManager.MODE_RINGTONE);
+            Uri ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+            mp = new MediaPlayer();
+            mp.setDataSource(context, ringtoneUri);
+            mp.setAudioStreamType(AudioManager.STREAM_RING);
+            mp.setLooping(true);
+            mp.prepare();
+            mp.start();
+        } catch (Exception e) {
+            mp = null;
+            vib = null;
         }
-        if (am == null) {
-            am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        }
-        //Context c = this;
-        int mode = am.getRingerMode();
-        if (mode == AudioManager.RINGER_MODE_SILENT) {
-            return;
-        }
-        if (vib == null) {
-            vib = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-        }
-        long[] pattern = {0, 1000, 1000};
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vib.vibrate(VibrationEffect.createWaveform(pattern, new int[] {0, 255, 0}, 0));
-        } else {
-            vib.vibrate(pattern, 0);
-        }
-        if (mode == AudioManager.RINGER_MODE_VIBRATE) {
-            return;
-        }
-        am.setMode(AudioManager.MODE_RINGTONE);
-        mp =
-                MediaPlayer.create(
-                        context,
-                        R.raw.incallmanager_ringtone,
-                        new AudioAttributes.Builder()
-                                .setContentType(AudioAttributes.CONTENT_TYPE_UNKNOWN)
-                                .setLegacyStreamType(AudioManager.STREAM_RING)
-                                .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                                .build(),
-                        am.generateAudioSessionId());
-        //mp.setVolume(1.0f, 1.0f);
-        mp.setLooping(true);
-        mp.start();
     }
 
     @ReactMethod
